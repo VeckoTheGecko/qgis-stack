@@ -3,16 +3,13 @@
 Each check returns a list of problems; an empty list means it passed.
 """
 
-import re
 from collections import defaultdict
 from collections.abc import Iterable
 
 from qp.channel import Record
 from qp.config import Config
-from qp.naming import PREFIX, package_name
+from qp.naming import package_name
 from qp.recipe import Recipe
-
-_NAME = re.compile(re.escape(PREFIX) + r"[a-z0-9][a-z0-9._-]*")
 
 
 def names(config: Config) -> dict[str, str]:
@@ -39,8 +36,6 @@ def naming(config: Config, feed_slugs: Iterable[str]) -> list[str]:
     by_name = defaultdict(list)
     for slug, name in chosen.items():
         by_name[name].append(slug)
-        if config.plugins[slug].name and not _NAME.fullmatch(name):
-            problems.append(f"{slug}: name {name!r} must look like {PREFIX}<lowercase>")
     for name, slugs in sorted(by_name.items()):
         if len(slugs) > 1:
             problems.append(f"{', '.join(sorted(slugs))}: all named {name}")

@@ -52,7 +52,7 @@ def test_python_m_qp():
 
 def test_generate_unknown_plugin(tmp_path, capsys):
     config = tmp_path / "plugins.toml"
-    config.write_text("[settings]\nfeed_lines = []\ntest_lines = []\n[plugins.demo]\n")
+    config.write_text('[settings]\nfeed_lines = ["4.2"]\ntest_lines = ["4.2"]\n[plugins.demo]\n')
     assert main(["--config", str(config), "generate", "--plugin", "nope"]) == 1
     assert "not in plugins.toml: nope" in capsys.readouterr().err
 

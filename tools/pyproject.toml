@@ -7,7 +7,7 @@ name = "qgis-plugin-pipeline"
 version = "0.0.0"
 description = "Generate, build and publish conda packages for QGIS plugins"
 requires-python = ">=3.14"
-dependencies = ["pyyaml"]
+dependencies = ["pydantic>=2", "pyyaml"]
 
 [project.scripts]
 qp = "qp.cli:main"

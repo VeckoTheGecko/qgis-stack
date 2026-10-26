@@ -101,13 +101,13 @@ def generate(
                 "files": [f"{plugin_dir}/metadata.txt", f"{plugin_dir}/__init__.py"],
             }
         },
-        _plugin_test("qgis", plugin.test_import),
+        _plugin_test("qgis", plugin.test.import_),
     ]
     oldest = oldest_test_line(test_lines, qgis_min, qgis_max)
     if oldest:
-        tests.append(_plugin_test(f"qgis {oldest}.*", plugin.test_import))
-    if plugin.test_commands:
-        tests.append({"requirements": {"run": ["qgis"]}, "script": list(plugin.test_commands)})
+        tests.append(_plugin_test(f"qgis {oldest}.*", plugin.test.import_))
+    if plugin.test.commands:
+        tests.append({"requirements": {"run": ["qgis"]}, "script": list(plugin.test.commands)})
 
     name = plugin.name or package_name(slug)
     sha256 = hashlib.sha256(data).hexdigest()

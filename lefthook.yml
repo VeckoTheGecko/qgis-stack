@@ -12,6 +12,12 @@ pre-commit:
       glob: "tools/**/*.py"
       run: pixi run ruff format {staged_files}
       stage_fixed: true
+    # plugins.schema.json is generated from the plugins.toml models.
+    schema:
+      priority: 3
+      glob: "tools/qp/config.py"
+      run: pixi run schema
+      stage_fixed: true
     pixi-lock:
       glob: "{pixi.toml,tools/pyproject.toml}"
       run: pixi lock --check

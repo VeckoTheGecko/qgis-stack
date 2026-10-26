@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Plugin": {
+      "additionalProperties": false,
+      "description": "Overrides for one plugin; the table key is the slug on plugins.qgis.org.",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "pattern": "^qgis-plugin-[a-z0-9][a-z0-9._-]*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Package name instead of qgis-plugin-<slug lowercased>. Needed when the default name is shared with another plugin.",
+          "title": "Name"
+        },
+        "skip": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Don't build this plugin, for this reason.",
+          "title": "Skip"
+        },
+        "note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Free text: why the overrides are there, e.g. where add_run came from.",
+          "title": "Note"
+        },
+        "add_run": {
+          "description": "Extra run dependencies from conda-forge, e.g. Python packages the plugin imports but doesn't bundle.",
+          "items": {
+            "examples": [
+              "plotly",
+              "pandas >=2"
+            ],
+            "pattern": "^[a-z0-9_][a-z0-9._-]*(\\s+[^:\\s][^:]*)?$",
+            "type": "string"
+          },
+          "title": "Add Run",
+          "type": "array"
+        },
+        "qgis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/QgisRange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "version": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Conda version for an upstream version that can't be normalised automatically, e.g. { \"2.0 final\" = \"2.0\" }.",
+          "title": "Version",
+          "type": "object"
+        },
+        "license": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "SPDX licence id, instead of detecting it from the ZIP.",
+          "title": "License"
+        },
+        "build_number": {
+          "default": 0,
+          "description": "Raise it when an override changes an already published version.",
+          "minimum": 0,
+          "title": "Build Number",
+          "type": "integer"
+        },
+        "test": {
+          "$ref": "#/$defs/TestOptions"
+        }
+      },
+      "title": "Plugin",
+      "type": "object"
+    },
+    "QgisRange": {
+      "additionalProperties": false,
+      "description": "QGIS range replacing metadata.txt's. It may only narrow that range: QGIS won't load\na plugin outside it.",
+      "properties": {
+        "min": {
+          "description": "Lowest QGIS version; two-part gets .0 appended.",
+          "examples": [
+            "3.40",
+            "3.44.2"
+          ],
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+          "title": "Min",
+          "type": "string"
+        },
+        "max": {
+          "description": "Highest QGIS version; two-part gets .99 appended.",
+          "examples": [
+            "3.40",
+            "3.44.2"
+          ],
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+          "title": "Max",
+          "type": "string"
+        }
+      },
+      "required": [
+        "min",
+        "max"
+      ],
+      "title": "QgisRange",
+      "type": "object"
+    },
+    "Settings": {
+      "additionalProperties": false,
+      "description": "Pipeline settings.",
+      "properties": {
+        "feed_lines": {
+          "description": "QGIS lines whose plugins.qgis.org feed is read. Each feed lists only the newest version of every plugin compatible with that line.",
+          "items": {
+            "examples": [
+              "4.2"
+            ],
+            "pattern": "^\\d+\\.\\d+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Feed Lines",
+          "type": "array"
+        },
+        "test_lines": {
+          "description": "QGIS lines on conda-forge to test against: the oldest one inside a plugin's range, plus the newest QGIS.",
+          "items": {
+            "examples": [
+              "4.2"
+            ],
+            "pattern": "^\\d+\\.\\d+$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Test Lines",
+          "type": "array"
+        },
+        "include_experimental": {
+          "default": false,
+          "description": "Also package versions flagged experimental on plugins.qgis.org.",
+          "title": "Include Experimental",
+          "type": "boolean"
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Channel already published to, for `qp check`'s build-number check: a URL (https://prefix.dev/<channel>) or a local channel directory.",
+          "title": "Channel"
+        }
+      },
+      "required": [
+        "feed_lines",
+        "test_lines"
+      ],
+      "title": "Settings",
+      "type": "object"
+    },
+    "TestOptions": {
+      "additionalProperties": false,
+      "description": "Test options.",
+      "properties": {
+        "import": {
+          "default": true,
+          "description": "Import the plugin in the test. Turn off for plugins with side effects at import.",
+          "title": "Import",
+          "type": "boolean"
+        },
+        "commands": {
+          "description": "Extra test commands, run with the newest QGIS and the package installed.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Commands",
+          "type": "array"
+        }
+      },
+      "title": "TestOptions",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "plugins.toml: the plugins to package and how.",
+  "properties": {
+    "settings": {
+      "$ref": "#/$defs/Settings"
+    },
+    "plugins": {
+      "description": "One table per plugin, keyed by its slug on plugins.qgis.org (exact, case-sensitive) and sorted case-insensitively.",
+      "patternProperties": {
+        "^[A-Za-z][A-Za-z0-9_-]*$": {
+          "$ref": "#/$defs/Plugin"
+        }
+      },
+      "title": "Plugins",
+      "type": "object"
+    }
+  },
+  "required": [
+    "settings"
+  ],
+  "title": "Config",
+  "type": "object"
+}

@@ -12,6 +12,7 @@ ruff = "*"
 lefthook = ">=2.2,<3"
 rattler-build = ">=0.77.0,<0.78"
 pyyaml = ">=6.0.3,<7"
+pydantic = ">=2.14,<3"
 
 [pypi-dependencies]
 # The pipeline tool (`qp`), from tools/.
@@ -23,3 +24,4 @@ test-network = { cmd = "pytest tools/tests -m network", description = "Tests tha
 lint = { cmd = "ruff check tools && ruff format --check tools", description = "Lint and format-check tools/" }
 fmt = { cmd = "ruff check --fix tools && ruff format tools", description = "Fix lint issues and format tools/" }
 install-hooks = { cmd = "lefthook install", description = "Install the git hooks from lefthook.yml" }
+schema = { cmd = "qp schema -o plugins.schema.json", description = "Regenerate plugins.schema.json (editor completion for plugins.toml) from tools/qp/config.py" }

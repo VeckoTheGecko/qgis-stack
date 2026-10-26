@@ -48,12 +48,8 @@ def _recipes(cfg, slugs: list[str]) -> tuple[list, list[str]]:
 def _load(args: argparse.Namespace):
     from qp import config
 
-    try:
-        cfg = config.load(args.config)
-        return cfg, cfg.select(getattr(args, "plugin", None))
-    except config.ConfigError as e:
-        print(e, file=sys.stderr)
-        return None, []
+    cfg = config.load(args.config)
+    return cfg, cfg.select(getattr(args, "plugin", None))
 
 
 def _report(problems: list[str]) -> int:
@@ -66,8 +62,6 @@ def _generate(args: argparse.Namespace) -> int:
     from qp import recipe
 
     cfg, slugs = _load(args)
-    if cfg is None:
-        return 1
     recipes, problems = _recipes(cfg, slugs)
     for generated in recipes:
         out = args.recipes_dir / generated.dirname
@@ -81,8 +75,6 @@ def _check(args: argparse.Namespace) -> int:
     from qp import channel, check, feed
 
     cfg, slugs = _load(args)
-    if cfg is None:
-        return 1
     feed_slugs = {e.slug for e in feed.load(cfg.settings.feed_lines)}
     problems = check.sorted_tables(cfg)
     problems += check.naming(cfg, feed_slugs)
@@ -163,6 +155,22 @@ def _build_args(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _schema(args: argparse.Namespace) -> int:
+    from qp import config
+
+    schema = config.json_schema()
+    if args.output:
+        args.output.write_text(schema)
+        print(f"wrote {args.output}")
+    else:
+        print(schema, end="")
+    return 0
+
+
+def _schema_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("-o", "--output", type=Path, help="write here instead of stdout")
+
+
 def _check_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--channel", help="published channel: URL or local dir (e.g. output)")
 
@@ -191,6 +199,7 @@ COMMANDS = [
     ),
     Command("upload", "upload built packages to the prefix.dev channel", "M5"),
     Command("add", "add a plugin to plugins.toml", "M2", _slug, _add),
+    Command("schema", "print the JSON schema of plugins.toml", "M2", _schema_args, _schema),
     Command("top", "suggest the most-downloaded plugins not yet selected", "M8", _top),
     Command("scan-deps", "suggest add_run entries from a plugin's ZIP", "M3", _slug),
     Command(
@@ -223,4 +232,10 @@ def main(argv: list[str] | None = None) -> int:
     if command.run is None:
         print(f"qp {command.name}: not implemented yet (planned for {command.milestone})")
         return NOT_IMPLEMENTED
-    return command.run(args)
+    from qp.config import ConfigError
+
+    try:
+        return command.run(args)
+    except ConfigError as e:
+        print(e, file=sys.stderr)
+        return 1

@@ -193,6 +193,8 @@ Changing `add_run` for an already published version needs a new build: `build_nu
 ## 6. Configuration files (TOML)
 
 ### `plugins.toml`
+*(As built:)* validated by pydantic models in `tools/qp/config.py`: strict types, unknown keys rejected, every problem reported with its `[table]`. `qp schema` (`pixi run schema`, also run by a pre-commit hook) generates `plugins.schema.json` from those models. The `#:schema ./plugins.schema.json` line at the top of `plugins.toml` gives completion, hover docs and checking in editors built on Taplo, such as VS Code's Even Better TOML.
+
 The selection, plus the "patched via a TOML file" layer from the diagram.
 
 ```toml

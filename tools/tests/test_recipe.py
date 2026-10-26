@@ -4,7 +4,7 @@ import pytest
 import yaml
 
 from qp import feed, recipe
-from qp.config import Plugin, QgisRange
+from qp.config import Plugin, QgisRange, TestOptions
 from qp.feed import FeedEntry
 
 GOLDEN = Path(__file__).parent / "golden"
@@ -108,11 +108,10 @@ def test_overrides(demo_zip):
         slug="demo",
         name="qgis-plugin-demo-renamed",
         add_run=["plotly"],
-        qgis=QgisRange("3.40", "3.44"),
+        qgis=QgisRange(min="3.40", max="3.44"),
         license="MIT",
         build_number=3,
-        test_import=False,
-        test_commands=["python -c 'import plotly'"],
+        test=TestOptions(import_=False, commands=["python -c 'import plotly'"]),
     )
     r = recipe.generate(entry(), demo_zip, ["3.40", "3.44", "4.2"], plugin)
     data = r.data
@@ -135,6 +134,6 @@ def test_overrides(demo_zip):
 
 
 def test_qgis_override_may_not_widen(demo_zip):
-    plugin = Plugin(slug="demo", qgis=QgisRange("3.28", "4.99"))
+    plugin = Plugin(slug="demo", qgis=QgisRange(min="3.28", max="4.99"))
     with pytest.raises(ValueError, match="widens metadata.txt's 3.32.0..4.99.99"):
         recipe.generate(entry(), demo_zip, ["4.2"], plugin)
