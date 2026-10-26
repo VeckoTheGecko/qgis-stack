@@ -1,5 +1,8 @@
 # QGIS plugin version strings
 
+> [!WARNING]
+> **AI-generated, not yet human-verified.** Written by Claude Opus 5.5 (`claude-opus-5-5`) in Claude Code, October 2026. Check claims against the linked sources before relying on them.
+
 This is about the plugin's own `version` field in `metadata.txt`, not QGIS versions (`qgisMinimumVersion`/`qgisMaximumVersion`).
 
 **Summary:**
