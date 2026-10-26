@@ -136,3 +136,20 @@ Question: which plugins are notoriously hard to set up because of their dependen
   - Putting `[authentication] generate-random-password-for-keychain=false` in the *global* file doesn't help. The probable cause is that settings-tree entries go through a static `QgsSettings` that's created before main() attaches the global file. I didn't verify that in the source.
   - So `list-plugins` seeds a throwaway profile's `QGIS4.ini` with those keys instead (`qgis-headless.ini`).
 - **`pixi run list-plugins`:** runs QGIS offscreen with `--code check_plugins.py` and prints each plugin, active/inactive, and where it was found. Python stdout is block-buffered under `--code`, so it uses `line_buffering`.
+
+## 2026-10-26: Pipeline plan (RoboStack / Octoconda comparison)
+
+Full plan in [`docs/plan.md`](docs/plan.md). New findings:
+- **RoboStack** (`RoboStack/robostack`) is now one monorepo for all ROS 2 distros: vinca + rattler-build + pixi. It has dependency patches (`add_host`/`add_run`), a rosdep → conda mapping, per-package tests, `rs check`, prefix.dev OIDC uploads, robostack-bot and nightly package tests. Most of its complexity (pinning, ABI, staged builds, mutex) doesn't apply to noarch plugins.
+- **Octoconda** (`prefix-dev/octoconda`) is a stateless sync. It uses the channel as state, a TOML config with per-package overrides, a cron schedule, and `validate_conda_package.py`. The plan is a hybrid of the two.
+- **Feed facts:**
+  - `external_dependencies` is empty for all 1,591 plugins in the 4.2 feed, and `plugin_dependencies` isn't in the feed at all. Deps must come from scanning ZIPs plus overrides.
+  - 31 versions aren't plain numbers.
+  - No public API lists all versions of a plugin.
+- **Immutability:** approved versions can't be edited, but can be deleted and the same version number re-uploaded, so pin `sha256` and report drift.
+- **Windows:** QGIS installs under `%LIBRARY_PREFIX%`, so the plugin dir is `Library/share/qgis/python/plugins`. Use two noarch variants (`__unix`/`__win`).
+- **Run deps carry no channel:** users must list our channel + conda-forge. Never publish a name that exists on conda-forge (strict channel priority).
+- **Naming collisions** (raised in review):
+  - Mapping slugs with lowercase + `_` → `-` gives **6 collisions** among the 3,849 slugs in the 3.40 + 4.2 feeds, including `profile-manager`/`profile_manager`.
+  - plugins.qgis.org blocks case-only duplicates (`package_name__iexact`). Since 2024-11 new slugs must be Python identifiers (no `-`). Under a dash mapping, a new `foo_bar` can still collide with any of the 214 legacy hyphenated slugs.
+  - Decision: `qgis-plugin-<slug.lower()>` **keeping `_`**. Only the 5 legacy case-only pairs remain, and they get pre-assigned names. Collisions are never auto-resolved. See docs/plan.md §5.1 / §15.
