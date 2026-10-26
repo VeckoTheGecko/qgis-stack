@@ -1,0 +1,7 @@
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# QGIS profiles and generated global settings
+.qgis/
+pixi.lock

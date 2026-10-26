@@ -1,0 +1,66 @@
+context:
+  # Plugin slug on plugins.qgis.org; also the top-level folder inside the ZIP.
+  plugin: quick_map_services
+  version: "1.5.2"
+  # QGIS compatibility from the ZIP's metadata.txt, padded to X.Y.Z the way
+  # QGIS's own installer does (min pads with .0, max with .99). Written by
+  # tools/sync_qgis_plugin_recipe.py and re-checked against the ZIP in build.sh.
+  qgis_min: "3.32.0"
+  qgis_max: "4.99.99"
+
+package:
+  name: qgis-plugin-quick-map-services
+  version: ${{ version }}
+
+source:
+  url: https://plugins.qgis.org/plugins/${{ plugin }}/version/${{ version }}/download/
+  sha256: 2fe873b5d6ac7918edc7279c51e0800a3ff52d8f185e431d4626552f17a010af
+  file_name: ${{ plugin }}-${{ version }}.zip
+
+build:
+  number: 0
+  noarch: generic
+  script:
+    file: build.sh
+    env:
+      PLUGIN: ${{ plugin }}
+      PLUGIN_VERSION: ${{ version }}
+      QGIS_MIN: ${{ qgis_min }}
+      QGIS_MAX: ${{ qgis_max }}
+
+requirements:
+  build:
+    - unzip
+  run:
+    # Same inclusive range QGIS's Plugin Manager applies (pyplugin_installer.version_compare.isCompatible).
+    - qgis >=${{ qgis_min }},<=${{ qgis_max }}
+
+tests:
+  - package_contents:
+      files:
+        - share/qgis/python/plugins/${{ plugin }}/metadata.txt
+        - share/qgis/python/plugins/${{ plugin }}/__init__.py
+  - files:
+      recipe:
+        - test_plugin.py
+    requirements:
+      run:
+        - qgis
+    script:
+      - python test_plugin.py ${{ plugin }}
+  # Oldest QGIS line the plugin claims to support.
+  - files:
+      recipe:
+        - test_plugin.py
+    requirements:
+      run:
+        - qgis 3.40.*
+    script:
+      - python test_plugin.py ${{ plugin }}
+
+about:
+  homepage: https://nextgis.com/blog/quickmapservices/
+  repository: https://github.com/nextgis/quickmapservices
+  summary: Find and add basemaps and geodata services to QGIS from the QMS catalog
+  license: GPL-2.0-or-later
+  license_file: ${{ plugin }}/LICENSE

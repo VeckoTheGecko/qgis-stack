@@ -1,0 +1,44 @@
+[workspace]
+authors = ["Vecko <36369090+VeckoTheGecko@users.noreply.github.com>"]
+channels = ["conda-forge"]
+name = "workspace"
+# The plugin recipe's build.sh is bash, so Windows is out for now.
+# QGIS 4.2 on conda-forge needs macOS >= 14 (Qt 6.11 -> moltenvk 1.4).
+platforms = [{ name = "osx-arm64-14", platform = "osx-arm64", macos = "14.0" }, "linux-64"]
+version = "0.1.0"
+# Needed for path (source) dependencies on local recipes.
+preview = ["pixi-build"]
+
+[dependencies]
+qgis = ">=4.2,<5"
+# Built from the local recipe; installs into $CONDA_PREFIX/share/qgis/python/plugins,
+# the system plugin dir QGIS scans on startup (no QGIS_PLUGINPATH needed for it).
+qgis-plugin-quick-map-services = { path = "../recipes/qgis-plugin-quick-map-services/recipe.yaml" }
+
+[activation]
+# Writes $QGIS_GLOBAL_SETTINGS_FILE: QGIS's bundled defaults + qgis-plugins.ini.
+scripts = ["activate.sh"]
+
+[activation.env]
+# Global settings are the fallback for anything not set in the user profile,
+# so plugins listed in qgis-plugins.ini start enabled.
+QGIS_GLOBAL_SETTINGS_FILE = "$PIXI_PROJECT_ROOT/.qgis/qgis_global_settings.ini"
+# Extra search path for plugins under development (not packaged yet).
+# Plugins here take priority over profile and system plugins.
+QGIS_PLUGINPATH = "$PIXI_PROJECT_ROOT/plugins"
+
+[tasks]
+# Project-local profile: keeps settings and profile-installed plugins out of
+# ~/Library/Application Support/QGIS, so the conda-installed versions are what runs.
+qgis = "qgis --profiles-path $PIXI_PROJECT_ROOT/.qgis"
+# Throwaway profile for headless runs. Its QGIS4.ini turns off the auth keychain
+# helper (see qgis-headless.ini). Setting these keys in the global settings file
+# had no effect when tested, so they go in the profile instead.
+headless-profile = "rm -rf .qgis/headless && mkdir -p .qgis/headless/profiles/default/qgis.org && cp qgis-headless.ini .qgis/headless/profiles/default/qgis.org/QGIS4.ini"
+
+[tasks.list-plugins]
+# Starts QGIS headless on a fresh profile, lists the plugins it found and
+# whether each is active, then quits.
+cmd = "qgis --profiles-path $PIXI_PROJECT_ROOT/.qgis/headless --nologo --code check_plugins.py"
+depends-on = ["headless-profile"]
+env = { QT_QPA_PLATFORM = "offscreen" }
