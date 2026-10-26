@@ -13,6 +13,8 @@ lefthook = ">=2.2,<3"
 rattler-build = ">=0.77.0,<0.78"
 pyyaml = ">=6.0.3,<7"
 pydantic = ">=2.14,<3"
+hypothesis = ">=6.170,<7"
+packaging = ">=26"
 
 [pypi-dependencies]
 # The pipeline tool (`qp`), from tools/.
