@@ -156,7 +156,7 @@ Rules that go with it:
 - The exact slug is kept in `extra.qgis_plugin_slug`. It's also the install folder name, which QGIS uses as the plugin ID, so it must stay exact.
 
 ### 5.2 Versions
-Normalisation, in order: strip a leading `v`; `-` → `.`/drop per conda rules (`2.0.0-beta1` → `2.0.0beta1`); otherwise keep it as is. Validate with `rattler` version parsing and fail closed if it can't be parsed: the `version` override in TOML then fixes it. The original string stays in `extra.qgis_plugin_version` because the build check compares against `metadata.txt`.
+Normalisation, in order: strip a leading `v`; `-` → `.`/drop per conda rules (`2.0.0-beta1` → `2.0.0beta1`); otherwise keep it as is. Validate with `rattler` version parsing and fail closed if it can't be parsed: the `version` override in TOML then fixes it. The original string stays in `extra.qgis_plugin_version` because the build check compares against `metadata.txt`. The site can rewrite versions, so the feed version isn't always the one in `metadata.txt`; see [plugin-versions.md](plugin-versions.md).
 
 ### 5.3 QGIS constraint
 From `metadata.txt` with QGIS's own padding rule: `qgis >=<min>,<=<max>` (already implemented in `tools/sync_qgis_plugin_recipe.py` and `build.sh`). The override `qgis = { min = "3.40", max = "3.44" }` (padded the same way) can only **narrow** the declared range, e.g. when a plugin claims 4.x support but breaks there. QGIS refuses to load a plugin outside its `metadata.txt` range, so widening it, e.g. a stale max of `3.99` for a plugin that really works on 4.x, needs a patch to `metadata.txt` (section 12). `generate` rejects a widening override.

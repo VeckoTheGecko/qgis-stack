@@ -54,7 +54,7 @@ An INI file with a `[general]` section.
 | `qgisMinimumVersion` | ✅ | e.g. `3.28` |
 | `description` | ✅ | One line, in English |
 | `about` | ✅ | Longer description |
-| `version` | ✅ | Plugin version string |
+| `version` | ✅ | Plugin version string. Free-form, and plugins.qgis.org may rewrite it: see [docs/plugin-versions.md](docs/plugin-versions.md) |
 | `author`, `email` | ✅ | Email is not shown publicly |
 | `repository` | ✅ | Public source code URL (the official repo checks it) |
 | `qgisMaximumVersion` | – | If empty, set to `<major>.99` on upload. **Set to `4.99` to declare QGIS 4 support** |
