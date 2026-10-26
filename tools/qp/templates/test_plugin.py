@@ -30,6 +30,9 @@ assert plugin in qgis.utils.available_plugins, qgis.utils.available_plugins
 meta = qgis.utils.pluginMetadata
 qgis_min = meta(plugin, "qgisMinimumVersion")
 qgis_max = meta(plugin, "qgisMaximumVersion")
+if qgis_max == "__error__":  # pluginMetadata's value for a missing key
+    # QGIS treats a missing max as "<major of min>.99".
+    qgis_max = qgis_min.split(".")[0] + ".99"
 assert isCompatible(pyQgisVersion(), qgis_min, qgis_max), (pyQgisVersion(), qgis_min, qgis_max)
 
 if "--no-import" not in sys.argv[2:]:
