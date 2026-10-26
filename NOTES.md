@@ -161,3 +161,7 @@ On branch `pipeline`.
 - Root `pixi.toml` (python 3.14, pytest, ruff) installs the tool editable from `tools/` (`tools/pyproject.toml`, hatchling). The package `qp` provides the `qp` console script.
 - `qp` has every command from plan §8 as a stub. Each one says which milestone implements it and exits 2.
 - Tasks: `pixi run test` (14 tests), `pixi run lint`, `pixi run fmt`.
+- **lefthook:**
+  - `lefthook.yml` with pre-commit hooks: `ruff check --fix` then `ruff format` on staged `tools/**/*.py`, re-staged with `stage_fixed`, run sequentially via `priority`. `pixi lock --check` runs when `pixi.toml` or `tools/pyproject.toml` is staged.
+  - pre-push hook: `pixi run test`.
+  - `lefthook` is a pixi dependency; install the hooks with `pixi run install-hooks`. The hook script uses `lefthook` from `PATH`, falling back to the env's copy. Skip once with `LEFTHOOK=0`.

@@ -1,0 +1,22 @@
+# Git hooks; install with `pixi run install-hooks`. Commands run in the pixi environment.
+pre-commit:
+  commands:
+    # Sequential on purpose: both rewrite the same files.
+    ruff-check:
+      priority: 1
+      glob: "tools/**/*.py"
+      run: pixi run ruff check --fix {staged_files}
+      stage_fixed: true
+    ruff-format:
+      priority: 2
+      glob: "tools/**/*.py"
+      run: pixi run ruff format {staged_files}
+      stage_fixed: true
+    pixi-lock:
+      glob: "{pixi.toml,tools/pyproject.toml}"
+      run: pixi lock --check
+
+pre-push:
+  commands:
+    test:
+      run: pixi run test
