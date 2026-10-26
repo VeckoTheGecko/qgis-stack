@@ -1,0 +1,22 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "qgis-plugin-pipeline"
+version = "0.0.0"
+description = "Generate, build and publish conda packages for QGIS plugins"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.scripts]
+qp = "qp.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["qp"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

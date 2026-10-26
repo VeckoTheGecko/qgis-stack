@@ -153,3 +153,11 @@ Full plan in [`docs/plan.md`](docs/plan.md). New findings:
   - Mapping slugs with lowercase + `_` → `-` gives **6 collisions** among the 3,849 slugs in the 3.40 + 4.2 feeds, including `profile-manager`/`profile_manager`.
   - plugins.qgis.org blocks case-only duplicates (`package_name__iexact`). Since 2024-11 new slugs must be Python identifiers (no `-`). Under a dash mapping, a new `foo_bar` can still collide with any of the 214 legacy hyphenated slugs.
   - Decision: `qgis-plugin-<slug.lower()>` **keeping `_`**. Only the 5 legacy case-only pairs remain, and they get pre-assigned names. Collisions are never auto-resolved. See docs/plan.md §5.1 / §15.
+
+## 2026-10-26: M0, tool skeleton
+
+On branch `pipeline`.
+- The plan moved to `docs/plan.md`.
+- Root `pixi.toml` (python 3.14, pytest, ruff) installs the tool editable from `tools/` (`tools/pyproject.toml`, hatchling). The package `qp` provides the `qp` console script.
+- `qp` has every command from plan §8 as a stub. Each one says which milestone implements it and exits 2.
+- Tasks: `pixi run test` (14 tests), `pixi run lint`, `pixi run fmt`.

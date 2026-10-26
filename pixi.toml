@@ -1,0 +1,20 @@
+[workspace]
+name = "qgis-plugin-pipeline"
+description = "Conda packages for QGIS plugins from plugins.qgis.org (see docs/plan.md)"
+authors = ["Vecko <36369090+VeckoTheGecko@users.noreply.github.com>"]
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
+
+[dependencies]
+python = "3.14.*"
+pytest = ">=9,<10"
+ruff = "*"
+
+[pypi-dependencies]
+# The pipeline tool (`qp`), from tools/.
+qgis-plugin-pipeline = { path = "tools", editable = true }
+
+[tasks]
+test = { cmd = "pytest tools/tests", description = "Unit tests of the pipeline tool" }
+lint = { cmd = "ruff check tools && ruff format --check tools", description = "Lint and format-check tools/" }
+fmt = { cmd = "ruff check --fix tools && ruff format tools", description = "Fix lint issues and format tools/" }

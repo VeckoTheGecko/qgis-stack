@@ -319,7 +319,7 @@ AGENTS.md               short notes for agents (RoboStack-style)
 
 | # | Milestone | Done when |
 |---|---|---|
-| M0 | Tool skeleton + root `pixi.toml` | `pixi run qp --help` works; unit tests run |
+| M0 ✅ | Tool skeleton + root `pixi.toml` | `pixi run qp --help` works; unit tests run |
 | M1 | Generator for one plugin | Generated QMS recipe matches the hand-written one apart from the package name, now `qgis-plugin-quick_map_services` (golden test); builds, and tests pass on QGIS 3.40 + 4.2 |
 | M2 | Overrides + naming/version rules + `check` | `plugins.toml` with ~10 plugins, including one with `add_run` and one with an odd version; `check` catches a collision, a conda-forge name clash and a missing `build_number` bump |
 | M3 | Dependency scanner + `mappings.toml` | `scan-deps` suggests correct `add_run` for 3 plugins with known deps |
