@@ -22,7 +22,10 @@ def test_command_is_required(capsys):
     assert "required" in capsys.readouterr().err
 
 
-@pytest.mark.parametrize("command", COMMANDS, ids=lambda c: c.name)
+STUBS = [c for c in COMMANDS if c.run is None]
+
+
+@pytest.mark.parametrize("command", STUBS, ids=lambda c: c.name)
 def test_stub_reports_its_milestone(command, capsys):
     argv = [command.name]
     if command.name in {"add", "scan-deps"}:
@@ -45,3 +48,15 @@ def test_python_m_qp():
     )
     assert result.returncode == 0
     assert "usage: qp" in result.stdout
+
+
+def test_generate_unknown_plugin(tmp_path, capsys):
+    config = tmp_path / "plugins.toml"
+    config.write_text("[settings]\nfeed_lines = []\ntest_lines = []\n[plugins.demo]\n")
+    assert main(["--config", str(config), "generate", "--plugin", "nope"]) == 1
+    assert "not in plugins.toml: nope" in capsys.readouterr().err
+
+
+def test_build_without_recipes(tmp_path, capsys):
+    assert main(["--recipes-dir", str(tmp_path), "build"]) == 1
+    assert "run `qp generate` first" in capsys.readouterr().out

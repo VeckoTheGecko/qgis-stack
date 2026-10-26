@@ -1,0 +1,12 @@
+[settings]
+# QGIS lines whose plugins.qgis.org feed is read. Each feed only lists the newest
+# version of every plugin compatible with that line, so several lines are needed to
+# see the versions users of older QGIS get.
+feed_lines = ["3.40", "3.44", "4.0", "4.2"]
+# QGIS lines on conda-forge that packages are tested against: the oldest one inside a
+# plugin's range, plus the newest QGIS. (conda-forge has no 4.0 builds.)
+test_lines = ["3.40", "3.44", "4.2"]
+include_experimental = false
+
+# One table per plugin; the key is the slug on plugins.qgis.org (exact, case-sensitive).
+[plugins.quick_map_services]

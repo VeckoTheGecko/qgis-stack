@@ -12,3 +12,7 @@ __pycache__/
 
 # Personal running notes (local only)
 NOTES.md
+
+# Generated recipes and the feed/ZIP cache (qp)
+recipes/
+.cache/

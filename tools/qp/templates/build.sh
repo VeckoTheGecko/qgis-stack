@@ -38,7 +38,7 @@ check version "$PLUGIN_VERSION" "$meta_version"
 check qgis_min "$QGIS_MIN" "$meta_min"
 check qgis_max "$QGIS_MAX" "$meta_max"
 if (( fail )); then
-  echo "Run tools/sync_qgis_plugin_recipe.py to update the recipe." >&2
+  echo "Regenerate the recipe with qp generate." >&2
   exit 1
 fi
 

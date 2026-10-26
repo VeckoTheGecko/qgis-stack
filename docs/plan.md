@@ -126,7 +126,7 @@ RoboStack commits a snapshot because rosdistro syncs are curated releases of tho
 
 ### 4.2 Which versions get built
 
-The feed only shows the newest version per QGIS minor. The sync queries a configured list of QGIS lines (e.g. `["3.40", "3.44", "4.0", "4.2"]`, where LTR + latest matter) and builds every distinct version it sees that isn't on the channel. Over time the channel collects history even though the feed doesn't keep it. A version can also be listed explicitly with `versions = ["1.5.1"]` (download URL known, metadata read from the ZIP).
+The feed only shows the newest version per QGIS minor. The sync queries a configured list of QGIS lines (`feed_lines`, e.g. `["3.40", "3.44", "4.0", "4.2"]`, where LTR + latest matter) and builds every distinct version it sees that isn't on the channel. Over time the channel collects history even though the feed doesn't keep it. A version can also be listed explicitly with `versions = ["1.5.1"]` (download URL known, metadata read from the ZIP).
 
 ## 5. Recipe generation
 
@@ -198,7 +198,8 @@ The selection, plus the "patched via a TOML file" layer from the diagram.
 ```toml
 [settings]
 channel = "<prefix-channel>"
-qgis_lines = ["3.40", "3.44", "4.0", "4.2"]   # feeds to query (4.2)
+feed_lines = ["3.40", "3.44", "4.0", "4.2"]   # feeds to query (4.2)
+test_lines = ["3.40", "3.44", "4.2"]          # QGIS lines on conda-forge to test against (5.7); it has no 4.0
 include_experimental = false
 
 [plugins.quick_map_services]                  # key = slug (exact, case-sensitive)
@@ -239,7 +240,7 @@ Output is a suggested TOML block plus "unmapped imports" that need a decision.
 ## 8. Sync, build and publish
 
 - **CLI** (Python package in `tools/` or `src/`, run via pixi tasks; name `qp` is a placeholder):
-  - `feed`: fetch and cache feeds for `qgis_lines`.
+  - `feed`: fetch and cache feeds for `feed_lines`.
   - `plan`: selected versions minus the channel's (via `py-rattler` repodata). Prints what would be built.
   - `generate [--plugin S]`: write `recipes/`.
   - `build [--plugin S]`: rattler-build with tests, into `output/`.
@@ -320,7 +321,7 @@ AGENTS.md               short notes for agents (RoboStack-style)
 | # | Milestone | Done when |
 |---|---|---|
 | M0 ✅ | Tool skeleton + root `pixi.toml` | `pixi run qp --help` works; unit tests run |
-| M1 | Generator for one plugin | Generated QMS recipe matches the hand-written one apart from the package name, now `qgis-plugin-quick_map_services` (golden test); builds, and tests pass on QGIS 3.40 + 4.2 |
+| M1 ✅ | Generator for one plugin | Generated QMS recipe matches the hand-written one apart from the package name, now `qgis-plugin-quick_map_services` (golden test); builds, and tests pass on QGIS 3.40 + 4.2 |
 | M2 | Overrides + naming/version rules + `check` | `plugins.toml` with ~10 plugins, including one with `add_run` and one with an odd version; `check` catches a collision, a conda-forge name clash and a missing `build_number` bump |
 | M3 | Dependency scanner + `mappings.toml` | `scan-deps` suggests correct `add_run` for 3 plugins with known deps |
 | M4 | `__unix`/`__win` variants | Windows CI job installs and tests one plugin |

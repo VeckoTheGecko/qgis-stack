@@ -1,3 +1,8 @@
+# Golden reference for the generated QuickMapServices 1.5.2 recipe (M1).
+# The hand-written recipe from commit 3527934, with only these intended changes:
+#   - package.name uses the naming rule from docs/plan.md 5.1 (keep `_`);
+#   - about.summary is the plugin's own metadata.txt description;
+#   - extra records the plugin's identity and source hash (docs/plan.md 5.6).
 context:
   # Plugin slug on plugins.qgis.org; also the top-level folder inside the ZIP.
   plugin: quick_map_services
@@ -9,7 +14,7 @@ context:
   qgis_max: "4.99.99"
 
 package:
-  name: qgis-plugin-quick-map-services
+  name: qgis-plugin-quick_map_services
   version: ${{ version }}
 
 source:
@@ -61,6 +66,12 @@ tests:
 about:
   homepage: https://nextgis.com/blog/quickmapservices/
   repository: https://github.com/nextgis/quickmapservices
-  summary: Find and add basemaps and geodata services to QGIS from the QMS catalog
+  summary: Quickly find and add basemaps and geodata services to your project in one click using the open QMS catalog
   license: GPL-2.0-or-later
   license_file: ${{ plugin }}/LICENSE
+
+extra:
+  qgis_plugin_slug: quick_map_services
+  qgis_plugin_version: "1.5.2"
+  qgis_plugin_id: "663"
+  source_sha256: 2fe873b5d6ac7918edc7279c51e0800a3ff52d8f185e431d4626552f17a010af

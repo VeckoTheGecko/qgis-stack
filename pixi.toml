@@ -10,13 +10,16 @@ python = "3.14.*"
 pytest = ">=9,<10"
 ruff = "*"
 lefthook = ">=2.2,<3"
+rattler-build = ">=0.77.0,<0.78"
+pyyaml = ">=6.0.3,<7"
 
 [pypi-dependencies]
 # The pipeline tool (`qp`), from tools/.
 qgis-plugin-pipeline = { path = "tools", editable = true }
 
 [tasks]
-test = { cmd = "pytest tools/tests", description = "Unit tests of the pipeline tool" }
+test = { cmd = "pytest tools/tests", description = "Unit tests of the pipeline tool (offline)" }
+test-network = { cmd = "pytest tools/tests -m network", description = "Tests that download from plugins.qgis.org (golden recipe)" }
 lint = { cmd = "ruff check tools && ruff format --check tools", description = "Lint and format-check tools/" }
 fmt = { cmd = "ruff check --fix tools && ruff format tools", description = "Fix lint issues and format tools/" }
 install-hooks = { cmd = "lefthook install", description = "Install the git hooks from lefthook.yml" }
