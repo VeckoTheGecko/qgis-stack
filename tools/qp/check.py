@@ -1,4 +1,4 @@
-"""Sanity checks over plugins.toml (docs/plan.md sections 5.1, 5.8 and 8).
+"""Sanity checks over plugins.toml (the design plan sections 5.1, 5.8 and 8).
 
 Each check returns a list of problems; an empty list means it passed.
 """

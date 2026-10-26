@@ -1,4 +1,6 @@
-"""Hypothesis strategies for QGIS plugin version strings (docs/plugin-versions.md).
+"""Hypothesis strategies for QGIS plugin version strings.
+
+See docs/src/content/docs/background/plugin-versions.md.
 
 plugins.qgis.org accepts any `version` in metadata.txt, but real ones follow a loose
 grammar:

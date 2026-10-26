@@ -21,8 +21,18 @@ pre-commit:
     pixi-lock:
       glob: "{pixi.toml,tools/pyproject.toml}"
       run: pixi lock --check
+    prettier:
+      root: "docs/"
+      glob: "docs/**"
+      exclude: "docs/pnpm-lock.yaml"
+      run: pixi run -e docs pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
 
 pre-push:
   commands:
     test:
       run: pixi run test
+    # Type-checks the site, and the build fails on broken internal links.
+    docs:
+      glob: "docs/**"
+      run: pixi run docs-check && pixi run docs-build

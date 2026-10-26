@@ -2,7 +2,7 @@
 # The plugins to package: one [plugins.<slug>] table each, keyed by the slug on
 # plugins.qgis.org (exact, case-sensitive), sorted case-insensitively (`qp add` keeps
 # the order). Overrides patch what the plugin's own metadata gets wrong or leaves out;
-# see docs/plan.md section 6.
+# see the design plan (docs/src/content/docs/maintainers/plan.md) section 6.
 
 [settings]
 # QGIS lines whose plugins.qgis.org feed is read. Each feed only lists the newest

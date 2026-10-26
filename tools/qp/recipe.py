@@ -1,4 +1,4 @@
-"""Generate a rattler-build recipe for one plugin version (docs/plan.md section 5)."""
+"""Generate a rattler-build recipe for one plugin version (the design plan section 5)."""
 
 import hashlib
 import shutil

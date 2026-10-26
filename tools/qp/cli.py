@@ -1,4 +1,4 @@
-"""Command-line entry point. Commands follow docs/plan.md section 8; unimplemented ones
+"""Command-line entry point. Commands follow the design plan section 8; unimplemented ones
 say which milestone adds them and exit with NOT_IMPLEMENTED."""
 
 import argparse
@@ -91,6 +91,21 @@ def _check(args: argparse.Namespace) -> int:
     return _report(problems)
 
 
+def _catalogue(args: argparse.Namespace) -> int:
+    from qp import catalogue, channel, config
+
+    cfg = config.load(args.config)
+    target = args.channel or cfg.settings.channel
+    if not target:
+        print("no channel given (--channel or settings.channel)", file=sys.stderr)
+        return 1
+    entries = catalogue.entries(channel.records(target), cfg)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(catalogue.dumps(entries))
+    print(f"wrote {args.output} ({len(entries)} packages from {target})")
+    return 0
+
+
 def _validate(args: argparse.Namespace) -> int:
     from qp import validate
 
@@ -175,6 +190,17 @@ def _check_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--channel", help="published channel: URL or local dir (e.g. output)")
 
 
+def _catalogue_args(parser: argparse.ArgumentParser) -> None:
+    _check_args(parser)
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        default=Path("docs/src/data/plugins.json"),
+        help="%(default)s",
+    )
+
+
 def _validate_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("packages", nargs="*", type=Path, help="default: output/noarch/*")
 
@@ -208,6 +234,13 @@ COMMANDS = [
         "M2",
         _check_args,
         _check,
+    ),
+    Command(
+        "catalogue",
+        "write the docs site's plugin table from the channel's repodata",
+        "M6",
+        _catalogue_args,
+        _catalogue,
     ),
 ]
 

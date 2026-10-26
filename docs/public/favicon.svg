@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Three stacked map layers. -->
+  <g fill="none" stroke-width="2.5" stroke-linejoin="round">
+    <path d="M16 20 4 14l12-6 12 6z" stroke="#589632" fill="#589632" fill-opacity=".25"/>
+    <path d="m4 18.5 12 6 12-6" stroke="#93b023"/>
+    <path d="m4 23 12 6 12-6" stroke="#ee7913"/>
+  </g>
+</svg>

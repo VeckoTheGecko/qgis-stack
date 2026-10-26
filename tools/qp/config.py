@@ -1,5 +1,5 @@
 """Read plugins.toml: pipeline settings, the plugin selection and per-plugin overrides
-(docs/plan.md section 6).
+(the design plan section 6).
 
 The models double as the source of plugins.schema.json (`qp schema`), which editors
 use for completion and checking via the `#:schema` line at the top of plugins.toml.
@@ -32,7 +32,7 @@ QgisLine = Annotated[str, Field(pattern=r"^\d+\.\d+$", examples=["4.2"])]
 QgisVersion = Annotated[str, Field(pattern=r"^\d+\.\d+(\.\d+)?$", examples=["3.40", "3.44.2"])]
 Slug = Annotated[str, Field(pattern=r"^[A-Za-z][A-Za-z0-9_-]*$")]
 # A run requirement: conda-forge package name plus optional spec, without a channel, as
-# run dependencies resolve against the user's channels (docs/plan.md section 2).
+# run dependencies resolve against the user's channels (the design plan section 2).
 _RUN_SPEC = r"^[a-z0-9_][a-z0-9._-]*(\s+[^:\s][^:]*)?$"
 
 

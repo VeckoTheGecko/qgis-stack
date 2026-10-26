@@ -69,7 +69,7 @@ def test_write(demo_zip, tmp_path):
 
 @pytest.mark.network
 def test_golden_quick_map_services(tmp_path):
-    """The generated QMS 1.5.2 recipe equals the hand-written reference (docs/plan.md M1)."""
+    """The generated QMS 1.5.2 recipe equals the hand-written reference (the design plan M1)."""
     data = feed.download("quick_map_services", "1.5.2", tmp_path)
     generated = recipe.generate(
         entry("quick_map_services", "1.5.2", "663"), data, ["3.40", "3.44", "4.2"]

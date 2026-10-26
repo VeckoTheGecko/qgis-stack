@@ -1,4 +1,4 @@
-"""Check built packages before upload (docs/plan.md section 8; after Octoconda's
+"""Check built packages before upload (the design plan section 8; after Octoconda's
 validate_conda_package.py): only the plugin's files, a licence, no binaries."""
 
 import io

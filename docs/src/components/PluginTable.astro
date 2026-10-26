@@ -1,0 +1,84 @@
+---
+// The published plugins, from src/data/plugins.json (written by `qp catalogue`).
+// The glob is empty when the file hasn't been generated, so the site still builds.
+import { Aside } from "@astrojs/starlight/components";
+
+interface Entry {
+  name: string;
+  slug: string | null;
+  url: string | null;
+  version: string;
+  build_number: number;
+  versions: string[];
+  qgis: string;
+  depends: string[];
+  license: string | null;
+}
+
+const files = import.meta.glob<Entry[]>("../data/plugins.json", {
+  eager: true,
+  import: "default",
+});
+const entries: Entry[] = Object.values(files)[0] ?? [];
+
+/** ">=3.28.0,<=4.99.99" -> "3.28.0 – 4.99.99"; anything else as it is. */
+const qgisRange = (spec: string) =>
+  spec
+    .match(/^>=([^,]+),<=([^,]+)$/)
+    ?.slice(1)
+    .join(" – ") ?? spec;
+---
+
+{entries.length === 0 ? (
+  <Aside type="note" title="Nothing published yet">
+    The channel has no packages yet. To preview this table locally, build some
+    plugins and run <code>pixi run docs-data</code>, which reads the local
+    channel in <code>output/</code>.
+  </Aside>
+) : (
+  <>
+    <p>{entries.length} packages.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Version</th>
+          <th>QGIS</th>
+          <th>Extra dependencies</th>
+          <th>Licence</th>
+        </tr>
+      </thead>
+      <tbody>
+        {entries.map((e) => (
+          <tr>
+            <td>
+              <code>{e.name}</code>
+              {e.url && (
+                <>
+                  <br />
+                  <a href={e.url}>{e.slug}</a>
+                </>
+              )}
+            </td>
+            <td title={e.versions.join(", ")}>
+              {e.version}
+              {e.versions.length > 1 && (
+                <small> (+{e.versions.length - 1} older)</small>
+              )}
+            </td>
+            <td>{qgisRange(e.qgis)}</td>
+            <td>{e.depends.length ? e.depends.join(", ") : "—"}</td>
+            <td>{e.license ?? "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </>
+)}
+
+<style>
+  /* Package names and version ranges read badly when wrapped mid-token. */
+  td code {
+    white-space: nowrap;
+  }
+</style>

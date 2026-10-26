@@ -1,4 +1,4 @@
-"""Turn plugin versions into conda versions (docs/plan.md section 5.2)."""
+"""Turn plugin versions into conda versions (the design plan section 5.2)."""
 
 import re
 
@@ -17,7 +17,7 @@ class VersionError(ValueError):
 
 def server_form(version: str) -> str:
     """The version plugins.qgis.org stores, lists in the feed and puts in download URLs,
-    for a metadata.txt version (docs/plugin-versions.md).
+    for a metadata.txt version (docs/src/content/docs/background/plugin-versions.md).
 
     Mirrors QGIS-Django: PluginVersion.clean_version keeps the last space-separated
     word, then VersionField pads 4 dot-separated parts for sorting and strips the

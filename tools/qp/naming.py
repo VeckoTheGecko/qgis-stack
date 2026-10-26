@@ -1,4 +1,4 @@
-"""Conda package names for plugin slugs (docs/plan.md section 5.1)."""
+"""Conda package names for plugin slugs (the design plan section 5.1)."""
 
 import re
 
