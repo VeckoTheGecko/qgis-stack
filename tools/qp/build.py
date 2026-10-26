@@ -18,8 +18,12 @@ def recipe_dirs(recipes_dir: Path, slugs: list[str] | None = None) -> list[Path]
     return dirs
 
 
-def build(recipe_dir: Path, output_dir: Path) -> int:
+def build(recipe_dir: Path, output_dir: Path, test: bool = True) -> int:
+    """Build one recipe. Without `test`, the recipe's QGIS tests are skipped: each one
+    creates a QGIS environment, which makes them slow for iterating on recipes."""
     cmd = ["rattler-build", "build", "--recipe", str(recipe_dir), "--output-dir", str(output_dir)]
+    if not test:
+        cmd += ["--test", "skip"]
     for channel in CHANNELS:
         cmd += ["--channel", channel]
     return subprocess.run(cmd, check=False).returncode

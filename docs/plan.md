@@ -59,7 +59,7 @@ RoboStack builds conda packages for every ROS 2 distribution from one repo. Tool
 | `packages_select_by_deps` | Explicit selection plus dependency closure | **Yes** | `[plugins.<slug>]` tables in `plugins.toml`; closure over `plugin_dependencies` |
 | `packages_exclude` / `packages_skip` | Don't build, with or without dropping dependents | **Yes** | `skip = "reason"` |
 | `robostack.yaml` (rosdep key → conda pkg) | Maps upstream dependency names to conda-forge | **Yes, the core of dependency discovery** | `mappings.toml`: Python import name → conda-forge package, used by the dependency scanner |
-| `patch/dependencies.yaml` (`add_host`, `add_run`) | Fixes missing or wrong dependencies per package | **Yes, the main patch mechanism** | `add_run`, `remove_run`, `qgis` override in `plugins.toml`. No `host` needed |
+| `patch/dependencies.yaml` (`add_host`, `add_run`) | Fixes missing or wrong dependencies per package | **Yes, the main patch mechanism** | `add_run` and a narrowing `qgis` override in `plugins.toml`. No `host` needed |
 | `pkg_additional_info.yaml` | build_number, cmake args, dummy packages | **Yes (subset)** | `build_number`, `version` override, `license` override, test options |
 | `patch/*.patch` (+ `.osx`/`.win`) | Source patches | Later (section 12) | `patches/<slug>/*.patch` |
 | Pinning (`conda_build_config.yaml`, conda-forge migrations) | ABI-compatible builds | **No**: noarch, no host deps | none |
@@ -150,7 +150,7 @@ Options:
 
 Rules that go with it:
 - **Collisions never resolve automatically.** If two slugs map to one name, `check` fails and the generator refuses both until `plugins.toml` gives each colliding slug an explicit `name = "..."`. No first-come-first-served: with automatic tie-breaking, whichever slug was selected first would own the plain name, and selection order would decide permanent names.
-- **Known legacy collisions are listed up front.** `naming.toml` (or a `[collisions]` table) pre-assigns names to all 5 legacy case-pairs, plus any found in older feed lines (query back to 3.0 once), before they are ever selected.
+- **Known legacy collisions are caught up front.** *(As built in M2:)* instead of a separate `naming.toml`, `check` compares every selected plugin's default name with the default names of **all** slugs in the cached feeds, selected or not. A plugin whose default name is shared needs an explicit `name`. Older feed lines (back to 3.0) can be added to `feed_lines` to widen the net.
 - **Names are claimed only by publishing.** Before uploading a new name, `check` confirms the channel has no package with that name built from a *different* slug (compare `extra.qgis_plugin_slug`). That guards against a rename upstream or a mapping change.
 - **No clash with conda-forge** (strict channel priority would hide theirs): checked against conda-forge repodata.
 - The exact slug is kept in `extra.qgis_plugin_slug`. It's also the install folder name, which QGIS uses as the plugin ID, so it must stay exact.
@@ -159,7 +159,7 @@ Rules that go with it:
 Normalisation, in order: strip a leading `v`; `-` → `.`/drop per conda rules (`2.0.0-beta1` → `2.0.0beta1`); otherwise keep it as is. Validate with `rattler` version parsing and fail closed if it can't be parsed: the `version` override in TOML then fixes it. The original string stays in `extra.qgis_plugin_version` because the build check compares against `metadata.txt`.
 
 ### 5.3 QGIS constraint
-From `metadata.txt` with QGIS's own padding rule: `qgis >=<min>,<=<max>` (already implemented in `tools/sync_qgis_plugin_recipe.py` and `build.sh`). The override `qgis = ">=3.34,<=3.99.99"` is for plugins whose declared range is wrong, e.g. a stale max still at `3.99` when the plugin really works on 4.x, or the reverse.
+From `metadata.txt` with QGIS's own padding rule: `qgis >=<min>,<=<max>` (already implemented in `tools/sync_qgis_plugin_recipe.py` and `build.sh`). The override `qgis = { min = "3.40", max = "3.44" }` (padded the same way) can only **narrow** the declared range, e.g. when a plugin claims 4.x support but breaks there. QGIS refuses to load a plugin outside its `metadata.txt` range, so widening it, e.g. a stale max of `3.99` for a plugin that really works on 4.x, needs a patch to `metadata.txt` (section 12). `generate` rejects a widening override.
 
 ### 5.4 Platforms: two noarch variants
 Because the system plugin dir differs (section 2), each plugin is built as two `noarch: generic` variants, the conda-forge pattern for platform-specific noarch packages:
@@ -169,7 +169,7 @@ Because the system plugin dir differs (section 2), each plugin is built as two `
 The build step is a small Python script, not `build.sh`, so the same code runs everywhere. It replaces `unzip` + bash, reusing the metadata check from `build.sh`. **Needs verification:** rattler-build's variant syntax for `__unix`/`__win` noarch variants, and a Windows test run.
 
 ### 5.5 Dependencies
-- `run`: the `qgis` constraint + `add_run` from `plugins.toml` + other selected plugins named in `plugin_dependencies` (translated to package names).
+- `run`: the `qgis` constraint + `add_run` from `plugins.toml`. *Not yet:* other selected plugins named in `plugin_dependencies`. These use plugin **names**, not slugs, so they need a name → slug lookup.
 - No `host`/`build` deps beyond the build script's Python (build-only).
 - Run deps carry no channel (section 2). Names must exist on conda-forge, and `check` verifies that by solving.
 
@@ -177,7 +177,7 @@ The build step is a small Python script, not `build.sh`, so the same code runs e
 - `about.license`: SPDX string from the override, otherwise guessed from the LICENSE text (GPL-2.0-or-later / GPL-3.0-or-later / MIT ...). Fail closed and require an override if it can't be guessed.
 - `license_file: <slug>/LICENSE`.
 - `about.homepage` / `repository` from the feed. Summary from `description`.
-- `extra`: `qgis_plugin_slug`, `qgis_plugin_version`, `qgis_plugin_id`, `source_sha256`, `overrides_hash` (5.8).
+- `extra`: `qgis_plugin_slug`, `qgis_plugin_version`, `qgis_plugin_id`, `source_sha256`.
 
 ### 5.7 Tests (generated for every plugin)
 The existing `test_plugin.py`, run against **two** QGIS versions: the oldest available QGIS line inside the plugin's range, and the newest. It checks that QGIS discovers the plugin, that `isCompatible()` accepts it, and that it imports. Also:
@@ -187,7 +187,7 @@ The existing `test_plugin.py`, run against **two** QGIS versions: the oldest ava
 
 ### 5.8 Rebuilds after a metadata patch
 Changing `add_run` for an already published version needs a new build: `build_number` + 1 in the plugin's TOML table (RoboStack's per-package build numbers). The rattler-build hash doesn't change with deps, so the sync would otherwise skip it as existing.
-- **Guard:** `extra.overrides_hash` = hash of the plugin's effective overrides. `check` compares it with the newest published build and fails if overrides changed without a `build_number` bump.
+- **Guard** *(as built in M2; no overrides hash needed):* the channel's `repodata.json` already records each build's `depends` and `license`. `check --channel` compares them with what the recipe would produce for the same version. If they differ at the same `build_number`, it fails and names the change and the number to set.
 - **Open:** whether prefix.dev supports repodata patching or removing a broken build. Verify. Until then a fix always means a new build that supersedes the old one.
 
 ## 6. Configuration files (TOML)

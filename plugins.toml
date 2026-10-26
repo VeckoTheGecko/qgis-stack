@@ -1,3 +1,8 @@
+# The plugins to package: one [plugins.<slug>] table each, keyed by the slug on
+# plugins.qgis.org (exact, case-sensitive), sorted case-insensitively (`qp add` keeps
+# the order). Overrides patch what the plugin's own metadata gets wrong or leaves out;
+# see docs/plan.md section 6.
+
 [settings]
 # QGIS lines whose plugins.qgis.org feed is read. Each feed only lists the newest
 # version of every plugin compatible with that line, so several lines are needed to
@@ -8,5 +13,27 @@ feed_lines = ["3.40", "3.44", "4.0", "4.2"]
 test_lines = ["3.40", "3.44", "4.2"]
 include_experimental = false
 
-# One table per plugin; the key is the slug on plugins.qgis.org (exact, case-sensitive).
+[plugins.DataPlotly]
+add_run = ["plotly", "pandas"]
+test.commands = ["python -c 'import plotly, pandas'"]
+note = "imports plotly and pandas at load time and doesn't bundle them"
+
+[plugins.latlontools]
+
+[plugins.mmqgis]
+license = "GPL-2.0-only"
+note = "LICENSE is a short notice: 'under the terms of version 2 of the GNU General Public License'"
+
+[plugins.profiletool]
+
+[plugins.qfieldsync]
+
+[plugins.Qgis2threejs]
+
+[plugins.qgis2web]
+
 [plugins.quick_map_services]
+
+[plugins.QuickOSM]
+
+[plugins.shapetools]

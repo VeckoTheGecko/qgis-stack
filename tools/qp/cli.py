@@ -20,36 +20,110 @@ def _feed(args: argparse.Namespace) -> int:
     return 0
 
 
-def _generate(args: argparse.Namespace) -> int:
-    from qp import config, feed, recipe
+def _recipes(cfg, slugs: list[str]) -> tuple[list, list[str]]:
+    """Recipes for every non-skipped plugin version in the feeds, and the problems hit
+    on the way (plugin not in the feeds, licence or version needing an override, ...)."""
+    from qp import feed, recipe
 
-    cfg = config.load(args.config)
-    try:
-        slugs = cfg.select(args.plugin)
-    except ValueError as e:
-        print(e, file=sys.stderr)
-        return 1
     entries = feed.load(cfg.settings.feed_lines)
-    failed = False
+    recipes, problems = [], []
     for slug in slugs:
+        plugin = cfg.plugins[slug]
+        if plugin.skip:
+            print(f"{slug}: skipped ({plugin.skip})")
+            continue
         found = feed.versions(entries, slug, cfg.settings.include_experimental)
         if not found:
-            print(f"{slug}: not in the feeds for QGIS {', '.join(cfg.settings.feed_lines)}")
-            failed = True
-            continue
+            lines = ", ".join(cfg.settings.feed_lines)
+            problems.append(f"{slug}: not in the feeds for QGIS {lines}")
         for entry in found:
             try:
                 data = feed.download(slug, entry.version)
-                generated = recipe.generate(entry, data, cfg.settings.test_lines)
+                recipes.append(recipe.generate(entry, data, cfg.settings.test_lines, plugin))
             except ValueError as e:
-                print(f"{slug} {entry.version}: {e}", file=sys.stderr)
-                failed = True
-                continue
-            out = args.recipes_dir / generated.dirname
-            if out.exists():
-                shutil.rmtree(out)
-            print(recipe.write(generated, args.recipes_dir))
-    return 1 if failed else 0
+                problems.append(f"{slug} {entry.version}: {e}")
+    return recipes, problems
+
+
+def _load(args: argparse.Namespace):
+    from qp import config
+
+    try:
+        cfg = config.load(args.config)
+        return cfg, cfg.select(getattr(args, "plugin", None))
+    except config.ConfigError as e:
+        print(e, file=sys.stderr)
+        return None, []
+
+
+def _report(problems: list[str]) -> int:
+    for problem in problems:
+        print(problem, file=sys.stderr)
+    return 1 if problems else 0
+
+
+def _generate(args: argparse.Namespace) -> int:
+    from qp import recipe
+
+    cfg, slugs = _load(args)
+    if cfg is None:
+        return 1
+    recipes, problems = _recipes(cfg, slugs)
+    for generated in recipes:
+        out = args.recipes_dir / generated.dirname
+        if out.exists():
+            shutil.rmtree(out)
+        print(recipe.write(generated, args.recipes_dir))
+    return _report(problems)
+
+
+def _check(args: argparse.Namespace) -> int:
+    from qp import channel, check, feed
+
+    cfg, slugs = _load(args)
+    if cfg is None:
+        return 1
+    feed_slugs = {e.slug for e in feed.load(cfg.settings.feed_lines)}
+    problems = check.sorted_tables(cfg)
+    problems += check.naming(cfg, feed_slugs)
+    problems += check.conda_forge_clash(cfg, channel.conda_forge_names())
+    recipes, generate_problems = _recipes(cfg, slugs)
+    problems += generate_problems
+    target = args.channel or cfg.settings.channel
+    if target:
+        problems += check.build_numbers(recipes, channel.records(target))
+    else:
+        print("no channel given: build numbers not checked (--channel or settings.channel)")
+    if not problems:
+        print(f"OK: {len(slugs)} plugins, {len(recipes)} recipes")
+    return _report(problems)
+
+
+def _validate(args: argparse.Namespace) -> int:
+    from qp import validate
+
+    paths = args.packages or sorted(args.output_dir.glob("noarch/qgis-plugin-*.conda"))
+    if not paths:
+        print(f"no packages in {args.output_dir}/noarch; run `qp build` first")
+        return 1
+    problems = [p for path in paths for p in validate.validate(path)]
+    if not problems:
+        print(f"OK: {len(paths)} packages")
+    return _report(problems)
+
+
+def _add(args: argparse.Namespace) -> int:
+    from qp import config, edit, feed
+
+    settings = config.load(args.config).settings
+    if args.slug not in {e.slug for e in feed.load(settings.feed_lines)}:
+        print(f"{args.slug}: not in the feeds for QGIS {', '.join(settings.feed_lines)}")
+        return 1
+    if not edit.add_plugin(args.config, args.slug):
+        print(f"{args.slug}: already in {args.config}")
+        return 1
+    print(f"added [plugins.{args.slug}] to {args.config}")
+    return 0
 
 
 def _build(args: argparse.Namespace) -> int:
@@ -59,7 +133,7 @@ def _build(args: argparse.Namespace) -> int:
     if not dirs:
         print(f"no generated recipes in {args.recipes_dir}; run `qp generate` first")
         return 1
-    failed = [d.name for d in dirs if build.build(d, args.output_dir) != 0]
+    failed = [d.name for d in dirs if build.build(d, args.output_dir, not args.no_test) != 0]
     for name in failed:
         print(f"FAILED: {name}", file=sys.stderr)
     return 1 if failed else 0
@@ -82,6 +156,21 @@ def _slug(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("slug", help="plugin slug on plugins.qgis.org")
 
 
+def _build_args(parser: argparse.ArgumentParser) -> None:
+    _plugin_filter(parser)
+    parser.add_argument(
+        "--no-test", action="store_true", help="skip the QGIS tests (fast, for iterating)"
+    )
+
+
+def _check_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--channel", help="published channel: URL or local dir (e.g. output)")
+
+
+def _validate_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("packages", nargs="*", type=Path, help="default: output/noarch/*")
+
+
 def _top(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("-n", type=int, default=50, help="number of plugins (default: 50)")
 
@@ -91,14 +180,26 @@ COMMANDS = [
     Command("plan", "list selected plugin versions not yet on the channel", "M5"),
     Command("generate", "write rattler-build recipes to recipes/", "M1", _plugin_filter, _generate),
     Command(
-        "build", "build and test the generated recipes into output/", "M1", _plugin_filter, _build
+        "build", "build and test the generated recipes into output/", "M1", _build_args, _build
     ),
-    Command("validate", "check built packages: layout, licence, no binaries", "M2"),
+    Command(
+        "validate",
+        "check built packages: layout, licence, no binaries",
+        "M2",
+        _validate_args,
+        _validate,
+    ),
     Command("upload", "upload built packages to the prefix.dev channel", "M5"),
-    Command("add", "add a plugin to plugins.toml", "M2", _slug),
+    Command("add", "add a plugin to plugins.toml", "M2", _slug, _add),
     Command("top", "suggest the most-downloaded plugins not yet selected", "M8", _top),
     Command("scan-deps", "suggest add_run entries from a plugin's ZIP", "M3", _slug),
-    Command("check", "sanity checks: config, naming collisions, overrides vs channel", "M2"),
+    Command(
+        "check",
+        "sanity checks: config, naming collisions, overrides vs channel",
+        "M2",
+        _check_args,
+        _check,
+    ),
 ]
 
 

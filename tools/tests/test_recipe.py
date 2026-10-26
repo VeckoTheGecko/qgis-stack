@@ -4,6 +4,7 @@ import pytest
 import yaml
 
 from qp import feed, recipe
+from qp.config import Plugin, QgisRange
 from qp.feed import FeedEntry
 
 GOLDEN = Path(__file__).parent / "golden"
@@ -75,3 +76,65 @@ def test_golden_quick_map_services(tmp_path):
     )
     golden = yaml.safe_load((GOLDEN / "quick_map_services-1.5.2" / "recipe.yaml").read_text())
     assert generated.data == golden
+
+
+def demo_zip_with(version: str) -> bytes:
+    from conftest import GPL2, OR_LATER_HEADER, metadata_txt, plugin_zip
+
+    return plugin_zip(
+        "demo",
+        {
+            "metadata.txt": metadata_txt(version=version),
+            "LICENSE": GPL2,
+            "__init__.py": OR_LATER_HEADER,
+        },
+    )
+
+
+def test_upstream_version_kept_for_downloads():
+    r = recipe.generate(entry(version="v1.0"), demo_zip_with("v1.0"), ["4.2"])
+    assert r.version == "1.0"
+    data = r.data
+    assert data["context"]["version"] == "1.0"
+    assert data["context"]["upstream_version"] == "v1.0"
+    assert data["source"]["url"].endswith("/version/${{ upstream_version }}/download/")
+    assert data["source"]["file_name"] == "${{ plugin }}-${{ upstream_version }}.zip"
+    assert data["build"]["script"]["env"]["PLUGIN_VERSION"] == "${{ upstream_version }}"
+    assert data["extra"]["qgis_plugin_version"] == "v1.0"
+
+
+def test_overrides(demo_zip):
+    plugin = Plugin(
+        slug="demo",
+        name="qgis-plugin-demo-renamed",
+        add_run=["plotly"],
+        qgis=QgisRange("3.40", "3.44"),
+        license="MIT",
+        build_number=3,
+        test_import=False,
+        test_commands=["python -c 'import plotly'"],
+    )
+    r = recipe.generate(entry(), demo_zip, ["3.40", "3.44", "4.2"], plugin)
+    data = r.data
+    assert r.name == data["package"]["name"] == "qgis-plugin-demo-renamed"
+    assert data["build"]["number"] == r.build_number == 3
+    assert data["context"]["qgis_min"] == "3.40.0" and data["context"]["qgis_max"] == "3.44.99"
+    # build.sh still checks the ZIP against metadata.txt's own range
+    env = data["build"]["script"]["env"]
+    assert (env["QGIS_MIN"], env["QGIS_MAX"]) == ("3.32.0", "4.99.99")
+    assert data["requirements"]["run"] == ["qgis >=${{ qgis_min }},<=${{ qgis_max }}", "plotly"]
+    assert r.depends == ["qgis >=3.40.0,<=3.44.99", "plotly"]
+    assert r.license == data["about"]["license"] == "MIT"
+    scripts = [t.get("script") for t in data["tests"][1:]]
+    assert scripts == [
+        ["python test_plugin.py ${{ plugin }} --no-import"],
+        ["python test_plugin.py ${{ plugin }} --no-import"],
+        ["python -c 'import plotly'"],
+    ]
+    assert data["tests"][2]["requirements"]["run"] == ["qgis 3.40.*"]
+
+
+def test_qgis_override_may_not_widen(demo_zip):
+    plugin = Plugin(slug="demo", qgis=QgisRange("3.28", "4.99"))
+    with pytest.raises(ValueError, match="widens metadata.txt's 3.32.0..4.99.99"):
+        recipe.generate(entry(), demo_zip, ["4.2"], plugin)

@@ -1,4 +1,7 @@
-"""Check that the installed plugin is visible to, compatible with, and importable by QGIS."""
+"""Check that the installed plugin is visible to, compatible with, and importable by QGIS.
+
+Usage: python test_plugin.py SLUG [--no-import]
+"""
 
 import os
 import sys
@@ -29,8 +32,9 @@ qgis_min = meta(plugin, "qgisMinimumVersion")
 qgis_max = meta(plugin, "qgisMaximumVersion")
 assert isCompatible(pyQgisVersion(), qgis_min, qgis_max), (pyQgisVersion(), qgis_min, qgis_max)
 
-assert qgis.utils.loadPlugin(plugin), f"failed to import {plugin}"
-assert hasattr(sys.modules[plugin], "classFactory")
+if "--no-import" not in sys.argv[2:]:
+    assert qgis.utils.loadPlugin(plugin), f"failed to import {plugin}"
+    assert hasattr(sys.modules[plugin], "classFactory")
 print(f"{plugin} {meta(plugin, 'version')} OK (QGIS {qgis_min}..{qgis_max})")
 
 app.exitQgis()
