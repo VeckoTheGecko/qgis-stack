@@ -7,7 +7,7 @@ from qp.cli import main
 CONFIG = config.parse(
     {
         "settings": {"feed_lines": ["4.2"], "test_lines": ["4.2"]},
-        "plugins": {"QuickOSM": {}, "demo": {"name": "qgis-plugin-demo2"}},
+        "plugins": {"QuickOSM": {}, "demo": {"name": "qgis-stack-demo2"}},
     }
 )
 
@@ -18,9 +18,9 @@ def record(name, version, build_number=0, depends=("qgis >=3.40.0,<=4.99.99",)):
 
 def test_newest_version_by_conda_ordering():
     records = [
-        record("qgis-plugin-quickosm", "2.10.0"),
-        record("qgis-plugin-quickosm", "2.9.1"),
-        record("qgis-plugin-quickosm", "2.10.0", 1, ["qgis >=3.40.0,<=4.99.99", "pandas"]),
+        record("qgis-stack-quickosm", "2.10.0"),
+        record("qgis-stack-quickosm", "2.9.1"),
+        record("qgis-stack-quickosm", "2.10.0", 1, ["qgis >=3.40.0,<=4.99.99", "pandas"]),
     ]
     [entry] = catalogue.entries(records, CONFIG)
     assert entry["version"] == "2.10.0"  # not "2.9.1", as a string sort would say
@@ -33,11 +33,11 @@ def test_newest_version_by_conda_ordering():
 
 
 def test_name_override_and_unknown_package():
-    records = [record("qgis-plugin-demo2", "1.0"), record("qgis-plugin-gone", "1.0")]
+    records = [record("qgis-stack-demo2", "1.0"), record("qgis-stack-gone", "1.0")]
     by_name = {e["name"]: e for e in catalogue.entries(records, CONFIG)}
-    assert by_name["qgis-plugin-demo2"]["slug"] == "demo"
-    assert by_name["qgis-plugin-gone"]["slug"] is None  # published, no longer selected
-    assert by_name["qgis-plugin-gone"]["url"] is None
+    assert by_name["qgis-stack-demo2"]["slug"] == "demo"
+    assert by_name["qgis-stack-gone"]["slug"] is None  # published, no longer selected
+    assert by_name["qgis-stack-gone"]["url"] is None
 
 
 def test_cli_writes_json(tmp_path):

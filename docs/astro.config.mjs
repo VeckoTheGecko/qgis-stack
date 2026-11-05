@@ -33,7 +33,7 @@ export default defineConfig({
   markdown: { processor: satteri({ hastPlugins: [baseLinks] }) },
   integrations: [
     starlight({
-      title: "QStack",
+      title: "QGIS Stack",
       description:
         "QGIS plugins from plugins.qgis.org as conda packages, for reproducible QGIS setups with pixi.",
       plugins: [starlightLinksValidator()],

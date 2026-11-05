@@ -1,6 +1,6 @@
 ---
 title: Getting started
-description: Install QGIS and plugins from QStack with pixi.
+description: Install QGIS and plugins from QGIS Stack with pixi.
 sidebar:
   order: 1
 banner:
@@ -24,7 +24,7 @@ import { Aside, Steps } from "@astrojs/starlight/components";
    ```toml title="pixi.toml"
    [workspace]
    name = "my-gis"
-   # QStack first, then conda-forge for QGIS and the plugins' dependencies.
+   # QGIS Stack first, then conda-forge for QGIS and the plugins' dependencies.
    channels = ["https://prefix.dev/veckothegecko/qgis-stack-test", "conda-forge"]
    # QGIS 4.2 on conda-forge needs macOS 14 or later.
    platforms = [
@@ -34,8 +34,8 @@ import { Aside, Steps } from "@astrojs/starlight/components";
 
    [dependencies]
    qgis = ">=4.2,<5"
-   qgis-plugin-quickosm = "*"
-   qgis-plugin-dataplotly = "*"
+   qgis-stack-quickosm = "*"
+   qgis-stack-dataplotly = "*"
 
    [tasks]
    # A profile inside the workspace, so plugins installed through QGIS's
@@ -57,9 +57,9 @@ import { Aside, Steps } from "@astrojs/starlight/components";
 
 ## Package names
 
-A plugin's package is `qgis-plugin-` plus its slug on plugins.qgis.org in
-lower case: `QuickOSM` → `qgis-plugin-quickosm`, `quick_map_services` →
-`qgis-plugin-quick_map_services`. Underscores and dashes are kept as they are.
+A plugin's package is `qgis-stack-` plus its slug on plugins.qgis.org in
+lower case: `QuickOSM` → `qgis-stack-quickosm`, `quick_map_services` →
+`qgis-stack-quick_map_services`. Underscores and dashes are kept as they are.
 The [catalogue](/catalogue/) lists every package.
 
 ## Which QGIS versions

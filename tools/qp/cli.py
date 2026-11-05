@@ -126,7 +126,7 @@ def _upload(args: argparse.Namespace) -> int:
     except ValueError as e:
         print(e, file=sys.stderr)
         return 1
-    paths = args.packages or sorted(args.output_dir.glob("noarch/qgis-plugin-*.conda"))
+    paths = args.packages or sorted(args.output_dir.glob("noarch/qgis-stack-*.conda"))
     have = plan.published(channel.records(target))
     todo = [p for p in paths if plan.package_key(p) not in have]
     print(f"{len(todo)} of {len(paths)} packages not on {target}")
@@ -159,7 +159,7 @@ def _catalogue(args: argparse.Namespace) -> int:
 def _validate(args: argparse.Namespace) -> int:
     from qp import validate
 
-    paths = args.packages or sorted(args.output_dir.glob("noarch/qgis-plugin-*.conda"))
+    paths = args.packages or sorted(args.output_dir.glob("noarch/qgis-stack-*.conda"))
     if not paths:
         print(f"no packages in {args.output_dir}/noarch; run `qp build` first")
         return 1

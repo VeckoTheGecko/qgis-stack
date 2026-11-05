@@ -12,9 +12,9 @@ from qp.cli import main
 @pytest.mark.parametrize(
     ("file", "key"),
     [
-        ("qgis-plugin-latlontools-4.0.4-h4616a5c_0.conda", ("qgis-plugin-latlontools", "4.0.4", 0)),
-        ("qgis-plugin-profile-manager-1.2-h1_3.conda", ("qgis-plugin-profile-manager", "1.2", 3)),
-        ("qgis-plugin-x-2.0.0beta1-h1_0.tar.bz2", ("qgis-plugin-x", "2.0.0beta1", 0)),
+        ("qgis-stack-latlontools-4.0.4-h4616a5c_0.conda", ("qgis-stack-latlontools", "4.0.4", 0)),
+        ("qgis-stack-profile-manager-1.2-h1_3.conda", ("qgis-stack-profile-manager", "1.2", 3)),
+        ("qgis-stack-x-2.0.0beta1-h1_0.tar.bz2", ("qgis-stack-x", "2.0.0beta1", 0)),
     ],
 )
 def test_package_key(file, key):
@@ -24,8 +24,8 @@ def test_package_key(file, key):
 @pytest.mark.parametrize(
     ("url", "name"),
     [
-        ("https://prefix.dev/qstack", "qstack"),
-        ("https://prefix.dev/qstack-test/", "qstack-test"),
+        ("https://prefix.dev/qgis-stack", "qgis-stack"),
+        ("https://prefix.dev/qgis-stack-test/", "qgis-stack-test"),
         ("https://prefix.dev/veckothegecko/qgis-stack-test", "veckothegecko/qgis-stack-test"),
     ],
 )
@@ -51,7 +51,7 @@ def record(name, version, build_number=0):
     return Record(name, version, build_number, [], "GPL-2.0-or-later")
 
 
-PUBLISHED = [record("qgis-plugin-a", "1.0"), record("qgis-plugin-b", "2.0", 1)]
+PUBLISHED = [record("qgis-stack-a", "1.0"), record("qgis-stack-b", "2.0", 1)]
 
 
 def write_recipe(recipes_dir: Path, name: str, version: str, number: int = 0) -> Path:
@@ -61,44 +61,50 @@ def write_recipe(recipes_dir: Path, name: str, version: str, number: int = 0) ->
         "context": {"plugin": name, "version": version},
         "package": {"name": name, "version": "${{ version }}"},
         "build": {"number": number},
-        "extra": {"qgis_plugin_slug": name.removeprefix("qgis-plugin-")},
+        "extra": {"qgis_plugin_slug": name.removeprefix("qgis-stack-")},
     }
     (d / "recipe.yaml").write_text(yaml.safe_dump(recipe))
     return d
 
 
 def test_build_skips_published(tmp_path, monkeypatch, capsys):
-    write_recipe(tmp_path, "qgis-plugin-a", "1.0")  # published
-    write_recipe(tmp_path, "qgis-plugin-b", "2.0", 2)  # build_number bumped
+    write_recipe(tmp_path, "qgis-stack-a", "1.0")  # published
+    write_recipe(tmp_path, "qgis-stack-b", "2.0", 2)  # build_number bumped
     built = []
     monkeypatch.setattr(channel, "records", lambda target: PUBLISHED)
     monkeypatch.setattr(build, "build", lambda d, out, test: built.append(d.name) or 0)
     assert main(["--recipes-dir", str(tmp_path), "build", "--channel", "https://prefix.dev/x"]) == 0
-    assert built == ["qgis-plugin-b-2.0"]
-    assert "qgis-plugin-a-1.0: already on https://prefix.dev/x, skipped" in capsys.readouterr().out
+    assert built == ["qgis-stack-b-2.0"]
+    assert "qgis-stack-a-1.0: already on https://prefix.dev/x, skipped" in capsys.readouterr().out
 
 
 def test_upload_only_new_packages(tmp_path, monkeypatch, capsys):
     noarch = tmp_path / "noarch"
     noarch.mkdir()
     for file in [
-        "qgis-plugin-a-1.0-h1_0.conda",  # published
-        "qgis-plugin-b-2.0-h1_1.conda",  # published
-        "qgis-plugin-b-2.0-h1_2.conda",  # new build
-        "qgis-plugin-c-0.1-h1_0.conda",  # new package
+        "qgis-stack-a-1.0-h1_0.conda",  # published
+        "qgis-stack-b-2.0-h1_1.conda",  # published
+        "qgis-stack-b-2.0-h1_2.conda",  # new build
+        "qgis-stack-c-0.1-h1_0.conda",  # new package
     ]:
         (noarch / file).touch()
     calls = []
     monkeypatch.setattr(channel, "records", lambda target: PUBLISHED)
     monkeypatch.setattr(subprocess, "run", lambda cmd, check: calls.append(cmd) or _Done())
-    argv = ["--output-dir", str(tmp_path), "upload", "--channel", "https://prefix.dev/qstack-test"]
+    argv = [
+        "--output-dir",
+        str(tmp_path),
+        "upload",
+        "--channel",
+        "https://prefix.dev/qgis-stack-test",
+    ]
     assert main(argv) == 0
     [cmd] = calls
     assert cmd[:4] == ["rattler-build", "upload", "prefix", "--channel"]
-    assert cmd[4:6] == ["qstack-test", "--skip-existing"]
+    assert cmd[4:6] == ["qgis-stack-test", "--skip-existing"]
     assert [Path(p).name for p in cmd[6:]] == [
-        "qgis-plugin-b-2.0-h1_2.conda",
-        "qgis-plugin-c-0.1-h1_0.conda",
+        "qgis-stack-b-2.0-h1_2.conda",
+        "qgis-stack-c-0.1-h1_0.conda",
     ]
     assert "2 of 4 packages not on" in capsys.readouterr().out
 

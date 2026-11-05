@@ -1,9 +1,9 @@
-# QStack
+# QGIS Stack
 
 QGIS plugins from [plugins.qgis.org](https://plugins.qgis.org) as conda packages, so a whole QGIS setup (QGIS, plugins and the plugins' Python dependencies) can be declared in one `pixi.toml` and locked.
 
 > [!NOTE]
-> Unofficial, and not affiliated with QGIS.org. Work in progress: the channel isn't published yet.
+> Unofficial, and not affiliated with QGIS.org. Work in progress: packages go to a test channel, [prefix.dev/veckothegecko/qgis-stack-test](https://prefix.dev/channels/@veckothegecko/qgis-stack-test).
 > Most of this repository's code and docs were written with Claude Opus 5.5 and are not yet fully human-verified.
 
 ## Documentation

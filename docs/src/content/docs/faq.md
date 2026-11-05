@@ -1,6 +1,6 @@
 ---
 title: FAQ
-description: Common questions about QStack.
+description: Common questions about QGIS Stack.
 sidebar:
   order: 5
 banner:
@@ -9,7 +9,7 @@ banner:
 
 ## Is this an official QGIS project?
 
-No. QStack is unofficial and not affiliated with QGIS.org. It repackages
+No. QGIS Stack is unofficial and not affiliated with QGIS.org. It repackages
 plugins that are published on plugins.qgis.org; report problems with a
 plugin itself to the plugin's own tracker.
 
@@ -17,19 +17,19 @@ plugin itself to the plugin's own tracker.
 
 plugins.qgis.org requires plugins to be under a GPLv2-or-later-compatible
 licence and to ship a `LICENSE` file. Those licences allow redistribution.
-QStack packages the plugin unchanged, includes its `LICENSE`, and records the
+QGIS Stack packages the plugin unchanged, includes its `LICENSE`, and records the
 SPDX licence in the package metadata.
 
 ## Why not just use QGIS's Plugin Manager?
 
 The Plugin Manager installs the newest version into your user profile, with no
-lock file and no Python dependencies. QStack puts plugins into the same
+lock file and no Python dependencies. QGIS Stack puts plugins into the same
 environment as QGIS, so the whole setup is declared in `pixi.toml`, resolved
 together with the plugins' dependencies, and locked.
 
 ## The Plugin Manager offers an upgrade. Should I take it?
 
-Not in a QStack workspace. An upgrade installs into your profile, and the
+Not in a QGIS Stack workspace. An upgrade installs into your profile, and the
 profile copy then shadows the packaged one (see
 [Enabling plugins](/guides/enabling-plugins/)). Update the package instead
 (`pixi update`).
@@ -37,7 +37,7 @@ profile copy then shadows the packaged one (see
 ## Can a published plugin version change?
 
 Approved versions on plugins.qgis.org can't be edited, but they can be deleted
-and re-uploaded with the same version number. QStack records the SHA-256 of
+and re-uploaded with the same version number. QGIS Stack records the SHA-256 of
 the ZIP it built from, so a changed upload is detected rather than silently
 packaged.
 

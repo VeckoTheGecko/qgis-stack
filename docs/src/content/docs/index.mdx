@@ -1,9 +1,9 @@
 ---
-title: QStack
+title: QGIS Stack
 description: QGIS plugins from plugins.qgis.org as conda packages, for reproducible QGIS setups with pixi.
 template: splash
 hero:
-  tagline: QGIS and its plugins, declared in one pixi.toml. QStack mirrors plugins from plugins.qgis.org onto a conda channel, with the dependencies the plugins forget to declare.
+  tagline: QGIS and its plugins, declared in one pixi.toml. QGIS Stack mirrors plugins from plugins.qgis.org onto a conda channel, with the dependencies the plugins forget to declare.
 banner:
   content: AI-generated (Claude Opus 5.5, <code>claude-opus-5-5</code>) and not yet human-verified.
 ---
@@ -31,8 +31,8 @@ import {
 </LinkButton>
 
 <Aside type="caution" title="Work in progress">
-  QStack is an unofficial project, not affiliated with QGIS.org. Packages go to
-  a test channel for now.
+  QGIS Stack is an unofficial project, not affiliated with QGIS.org. Packages go
+  to a test channel for now.
 </Aside>
 
 <CardGrid>
@@ -41,8 +41,8 @@ import {
     in `pixi.lock`. A colleague, a server or CI gets the same setup.
   </Card>
   <Card title="Dependencies included" icon="puzzle">
-    Plugin metadata has no field for Python dependencies. QStack adds them from
-    conda-forge, so DataPlotly brings plotly and pandas with it.
+    Plugin metadata has no field for Python dependencies. QGIS Stack adds them
+    from conda-forge, so DataPlotly brings plotly and pandas with it.
   </Card>
   <Card title="Tested" icon="approve-check">
     Each package is installed into a real QGIS and imported, on the oldest and

@@ -8,7 +8,7 @@ import pytest
 
 from qp.validate import is_binary, validate
 
-NAME = "qgis-plugin-demo"
+NAME = "qgis-stack-demo"
 PLUGIN = "share/qgis/python/plugins/demo"
 
 

@@ -19,8 +19,8 @@ channels = ["https://prefix.dev/<channel>", "conda-forge"]
 
 [dependencies]
 qgis = "4.2.*"
-qgis-plugin-quick_map_services = "*"
-qgis-plugin-<something-with-deps> = "*"   # pulls e.g. geopandas, scikit-learn from conda-forge
+qgis-stack-quick_map_services = "*"
+qgis-stack-<something-with-deps> = "*"   # pulls e.g. geopandas, scikit-learn from conda-forge
 ```
 
 Out of scope for now: patching plugin _code_. The layout leaves room for it (section 12).
@@ -50,7 +50,7 @@ Out of scope for now: patching plugin _code_. The layout leaves room for it (sec
 
 - **Does `run` assume conda-forge?** No. A recipe's run dependencies are names plus version specs with no channel. They're resolved at install time against the user's channel list. So:
   - Users must list our channel **and** conda-forge. Docs and examples must say so.
-  - With pixi's default strict channel priority, if a name exists in our channel, conda-forge's copy of that name is never considered. **We must never publish a name that exists on conda-forge.** The `qgis-plugin-` prefix ensures that, and `check` should verify it (section 9).
+  - With pixi's default strict channel priority, if a name exists in our channel, conda-forge's copy of that name is never considered. **We must never publish a name that exists on conda-forge.** The `qgis-stack-` prefix ensures that, and `check` should verify it (section 9).
 - **Are plugin versions immutable?** Mostly, but not guaranteed (see "Mutability" above). Our recipe pins `sha256`, and the built package keeps the original bytes, so a re-uploaded ZIP can't silently change a published package. The sync should detect a hash mismatch for an already-published version and report it rather than rebuild (section 8).
 
 ## 3. Reference projects
@@ -155,7 +155,9 @@ Options:
 | lowercase + `_` → `-` (what the QMS recipe used) | 6: `AI_Agent`/`ai_agent`, `Auto_save`/`auto_save`, `PE3D_Downloader`/`pe3d_downloader`, `PLUGIN`/`plugin`, `Redistricting`/`redistricting`, **`profile-manager`/`profile_manager`** | **Yes.** Any new `foo_bar` collides with a legacy `foo-bar`, because the site's case-insensitive check doesn't treat `-` and `_` as the same. 214 hyphenated legacy slugs are potential collision targets forever |
 | **lowercase only, keep `_` and `-`**             | 5 (the case-only pairs above)                                                                                                                                                       | **No.** Case-only duplicates have been blocked upstream since the `iexact` check, so the set is frozen to legacy pairs and can be resolved once, now                                                              |
 
-**Decision: `qgis-plugin-<slug.lower()>`, keeping `_`** (e.g. `qgis-plugin-quick_map_services`, `qgis-plugin-quickosm`). It's less conventional-looking than dashes; conda-forge prefers `-` but allows `_`. In exchange the mapping is injective apart from case, and the collision set is closed.
+**Decision: `qgis-stack-<slug.lower()>`, keeping `_`** (e.g. `qgis-stack-quick_map_services`, `qgis-stack-quickosm`). It's less conventional-looking than dashes; conda-forge prefers `-` but allows `_`. In exchange the mapping is injective apart from case, and the collision set is closed.
+
+The prefix was `qgis-plugin-` until 2026-11-05. It was renamed to `qgis-stack-` with the project (QStack → QGIS Stack) before anything was published, so no package was ever released under the old prefix. Only the package name changed; recipes still record the upstream plugin in `extra.qgis_plugin_slug`, `extra.qgis_plugin_version` and `extra.qgis_plugin_id`.
 
 Rules that go with it:
 
@@ -293,7 +295,7 @@ Builds run on `ubuntu-latest`. Being noarch, a Windows job tests the `__win` var
 
 - `qp plan`, `qp build --channel` and `qp upload` key packages on (name, version, build number) against the channel's `noarch/repodata.json`. A 404 counts as an empty channel; other errors abort, so an outage can't trigger a full rebuild.
 - `qp upload` runs `rattler-build upload prefix --skip-existing`. With no API key, rattler-build uses trusted publishing in GitHub Actions.
-- `sync.yaml` and `pr.yaml` as in the table above. The channel is set in each workflow's `QSTACK_CHANNEL` env var: the public test channel `https://prefix.dev/veckothegecko/qgis-stack-test`. Channel URLs are `https://prefix.dev/<namespace>/<channel>`; upload uses `<namespace>/<channel>`. Per-plugin failures don't stop the run: sync uploads what passed, then fails.
+- `sync.yaml` and `pr.yaml` as in the table above. The channel is set in each workflow's `QGIS_STACK_CHANNEL` env var: the public test channel `https://prefix.dev/veckothegecko/qgis-stack-test`. Channel URLs are `https://prefix.dev/<namespace>/<channel>`; upload uses `<namespace>/<channel>`. Per-plugin failures don't stop the run: sync uploads what passed, then fails.
 - Not done:
   - the hash-drift check. Repodata has no `extra.source_sha256`, so it needs the published package's `info/` files;
   - verifying against a real channel and switching `test-workspace` to it (needs the GitHub repo and prefix.dev channel).
@@ -314,22 +316,22 @@ Modelled on `RoboStack/robostack.github.io`, which uses Astro + Starlight + Svel
 - **Deploy:** GitHub Pages (`withastro/action` or the pixi + `ghp-import` route RoboStack uses).
 - No need for RoboStack's `build.format: "file"`; that keeps legacy URLs.
 
-**As built (M6, 2026-10-26):** the project is named **QStack**.
+**As built (M6, 2026-10-26):** the project is named **QStack** (renamed QGIS Stack on 2026-11-05).
 
 - Astro 7 + Starlight 0.42, no Svelte. The catalogue is an Astro component (`PluginTable.astro`) over `docs/src/data/plugins.json`, written by `qp catalogue` (`pixi run docs-data [channel]`), which orders versions with py-rattler. An empty or missing file renders a "nothing published" note.
 - Extra tasks: `docs-data`, `docs-fmt`.
 - `starlight-links-validator` fails the build on broken internal links. Pages link root-relative; a Sätteri hast plugin in `astro.config.mjs` adds the GitHub Pages base path first.
-- Deploy: `.github/workflows/docs.yaml` with `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages`. The channel comes from the workflow env var `QSTACK_CHANNEL`.
+- Deploy: `.github/workflows/docs.yaml` with `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages`. The channel comes from the workflow env var `QGIS_STACK_CHANNEL`.
 - lefthook: prettier on staged docs files (pre-commit); `docs-check` + `docs-build` when pushing docs changes.
 - AI-written pages carry a "not yet human-verified" banner.
 - Not done: deployment (no remote yet).
 
 ## 11. Runtime enablement shipped with the packages
 
-Today `test-workspace/activate.sh` enables plugins per workspace. Moving this into packages would make `pixi add qgis-plugin-x` enough on its own:
+Today `test-workspace/activate.sh` enables plugins per workspace. Moving this into packages would make `pixi add qgis-stack-x` enough on its own:
 
 - Each plugin package drops `share/qgis/plugins-enabled.d/<slug>.ini` (`[PythonPlugins] <slug>=true`).
-- A small helper package `qgis-plugin-activation`, depended on by every plugin, ships `etc/conda/activate.d/qgis-plugins.{sh,bat}`. It merges QGIS's bundled `qgis_global_settings.ini` + all fragments into `$CONDA_PREFIX/share/qgis/qgis_global_settings.pixi.ini` and sets `QGIS_GLOBAL_SETTINGS_FILE`.
+- A small helper package, `qgis-stack` itself, depended on by every plugin, ships `etc/conda/activate.d/qgis-stack.{sh,bat}`. Its name can't collide with a plugin's: those are always `qgis-stack-<slug>`, while a helper named `qgis-stack-<word>` would collide with a plugin whose slug is that word. It merges QGIS's bundled `qgis_global_settings.ini` + all fragments into `$CONDA_PREFIX/share/qgis/qgis_global_settings.pixi.ini` and sets `QGIS_GLOBAL_SETTINGS_FILE`.
 - **To verify:**
   - pixi runs package `activate.d` scripts (it has to for conda-forge's own activation; check on all OSes).
   - Behaviour when the user already sets `QGIS_GLOBAL_SETTINGS_FILE`: probably merge theirs in.
@@ -367,13 +369,13 @@ AGENTS.md               short notes for agents (RoboStack-style)
 | #     | Milestone                                  | Done when                                                                                                                                                                          |
 | ----- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | M0 ✅ | Tool skeleton + root `pixi.toml`           | `pixi run qp --help` works; unit tests run                                                                                                                                         |
-| M1 ✅ | Generator for one plugin                   | Generated QMS recipe matches the hand-written one apart from the package name, now `qgis-plugin-quick_map_services` (golden test); builds, and tests pass on QGIS 3.40 + 4.2       |
+| M1 ✅ | Generator for one plugin                   | Generated QMS recipe matches the hand-written one apart from the package name, now `qgis-stack-quick_map_services` (golden test); builds, and tests pass on QGIS 3.40 + 4.2        |
 | M2    | Overrides + naming/version rules + `check` | `plugins.toml` with ~10 plugins, including one with `add_run` and one with an odd version; `check` catches a collision, a conda-forge name clash and a missing `build_number` bump |
 | M3    | Dependency scanner + `mappings.toml`       | `scan-deps` suggests correct `add_run` for 3 plugins with known deps                                                                                                               |
 | M4    | `__unix`/`__win` variants                  | Windows CI job installs and tests one plugin                                                                                                                                       |
 | M5 🚧 | Publish to a **test** prefix.dev channel   | `sync.yaml` uploads via OIDC; `test-workspace` installs from the channel                                                                                                           |
 | M6 🚧 | Docs site                                  | `docs-build` in CI; Pages deployed with the catalogue table                                                                                                                        |
-| M7    | Packaged enablement (section 11)           | Fresh env with only `pixi add qgis-plugin-x`: plugin active on first launch                                                                                                        |
+| M7    | Packaged enablement (section 11)           | Fresh env with only `pixi add qgis-stack-x`: plugin active on first launch                                                                                                         |
 | M8    | Scale + nightly tests                      | Top ~50 plugins by downloads; nightly test issue; move to the real channel                                                                                                         |
 | —     | Later                                      | Request issue form + bot; GitHub-only plugin sources; code patches                                                                                                                 |
 

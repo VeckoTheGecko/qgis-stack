@@ -1,13 +1,13 @@
 ---
 title: Requesting a plugin
-description: How plugins get into QStack, and how to fix their metadata with overrides.
+description: How plugins get into QGIS Stack, and how to fix their metadata with overrides.
 sidebar:
   order: 4
 banner:
   content: AI-generated (Claude Opus 5.5, <code>claude-opus-5-5</code>) and not yet human-verified.
 ---
 
-QStack only packages the plugins listed in `plugins.toml` at the root of the
+QGIS Stack only packages the plugins listed in `plugins.toml` at the root of the
 repository. Each plugin is one table, keyed by its slug on plugins.qgis.org
 (the last part of its URL, case-sensitive). An empty table is enough when the
 plugin's own metadata is right:

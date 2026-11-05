@@ -3,7 +3,7 @@
 # just picks up where the last one stopped.
 #
 # One-off setup:
-# - QSTACK_CHANNEL below: the target channel (a public prefix.dev channel).
+# - QGIS_STACK_CHANNEL below: the target channel (a public prefix.dev channel).
 # - On prefix.dev, in the channel's settings, add this repository and the workflow
 #   file `sync.yaml` as a trusted publisher. Uploads then authenticate with GitHub's
 #   OIDC token; no API key is stored.
@@ -21,7 +21,7 @@ on:
 
 env:
   # The prefix.dev channel packages are published to (the test channel for now).
-  QSTACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
+  QGIS_STACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
 
 permissions:
   contents: read
@@ -59,8 +59,8 @@ jobs:
       - name: Plan
         run: |
           {
-            echo "## Packages not yet on $QSTACK_CHANNEL"
-            pixi run qp plan --channel "$QSTACK_CHANNEL"
+            echo "## Packages not yet on $QGIS_STACK_CHANNEL"
+            pixi run qp plan --channel "$QGIS_STACK_CHANNEL"
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       # A plugin that needs an override (licence, version, ...) mustn't block the
@@ -73,11 +73,11 @@ jobs:
       - name: Build and test
         id: build
         continue-on-error: true
-        run: pixi run qp build --channel "$QSTACK_CHANNEL"
+        run: pixi run qp build --channel "$QGIS_STACK_CHANNEL"
 
       - name: Validate packages
         run: |
-          if compgen -G "output/noarch/qgis-plugin-*.conda" > /dev/null; then
+          if compgen -G "output/noarch/qgis-stack-*.conda" > /dev/null; then
             pixi run qp validate
           else
             echo "Nothing built."
@@ -85,7 +85,7 @@ jobs:
 
       - name: Upload
         if: ${{ !inputs.dry-run }}
-        run: pixi run qp upload --channel "$QSTACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: pixi run qp upload --channel "$QGIS_STACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Fail if a plugin failed
         if: steps.generate.outcome == 'failure' || steps.build.outcome == 'failure'
