@@ -34,7 +34,9 @@ check() {
     fail=1
   fi
 }
-check version "$PLUGIN_VERSION" "$meta_version"
+# PLUGIN_META_VERSION is set when plugins.qgis.org lists a normalised form of the
+# metadata.txt version (e.g. 1.0.a2 for 1.0.0a2).
+check version "${PLUGIN_META_VERSION:-$PLUGIN_VERSION}" "$meta_version"
 check qgis_min "$QGIS_MIN" "$meta_min"
 check qgis_max "$QGIS_MAX" "$meta_max"
 if (( fail )); then

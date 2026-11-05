@@ -58,6 +58,29 @@ def test_generate_rejects_version_mismatch(demo_zip):
         recipe.generate(entry(version="1.1"), demo_zip, ["4.2"])
 
 
+@pytest.mark.parametrize(
+    ("meta_version", "feed_version"),
+    [("1.0.0a2", "1.0.a2"), ("0.1 beta", "beta"), ("1.05", "1.5")],
+)
+def test_generate_accepts_server_normalised_version(meta_version, feed_version):
+    """plugins.qgis.org lists a normalised form of some metadata.txt versions."""
+    r = recipe.generate(
+        entry(version=feed_version),
+        demo_zip_with(meta_version),
+        ["4.2"],
+        Plugin(slug="demo", version={feed_version: "1.0"}),
+    )
+    env = r.data["build"]["script"]["env"]
+    assert env["PLUGIN_VERSION"] == "${{ upstream_version }}"  # the feed form, for the URL
+    assert env["PLUGIN_META_VERSION"] == meta_version  # what build.sh checks metadata.txt against
+    assert r.data["context"]["upstream_version"] == feed_version
+
+
+def test_meta_version_only_set_when_it_differs(demo_zip):
+    env = recipe.generate(entry(), demo_zip, ["4.2"]).data["build"]["script"]["env"]
+    assert "PLUGIN_META_VERSION" not in env
+
+
 def test_write(demo_zip, tmp_path):
     out = recipe.write(recipe.generate(entry(), demo_zip, ["4.2"]), tmp_path)
     assert sorted(p.name for p in out.iterdir()) == ["build.sh", "recipe.yaml", "test_plugin.py"]
