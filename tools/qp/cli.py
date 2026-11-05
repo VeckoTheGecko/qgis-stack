@@ -3,6 +3,7 @@ say which milestone adds them and exit with NOT_IMPLEMENTED."""
 
 import argparse
 import shutil
+import subprocess
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -91,6 +92,55 @@ def _check(args: argparse.Namespace) -> int:
     return _report(problems)
 
 
+def _target(args: argparse.Namespace, cfg) -> str | None:
+    return args.channel or cfg.settings.channel
+
+
+def _plan(args: argparse.Namespace) -> int:
+    from qp import channel, plan
+
+    cfg, slugs = _load(args)
+    target = _target(args, cfg)
+    if not target:
+        print("no channel given (--channel or settings.channel)", file=sys.stderr)
+        return 1
+    recipes, problems = _recipes(cfg, slugs)
+    have = plan.published(channel.records(target))
+    todo = [r for r in recipes if (r.name, r.version, r.build_number) not in have]
+    print(f"{len(todo)} of {len(recipes)} packages not on {target}")
+    for r in todo:
+        print(f"- {r.name} {r.version} (build {r.build_number})")
+    return _report(problems)
+
+
+def _upload(args: argparse.Namespace) -> int:
+    from qp import channel, config, plan
+
+    cfg = config.load(args.config)
+    target = _target(args, cfg)
+    if not target:
+        print("no channel given (--channel or settings.channel)", file=sys.stderr)
+        return 1
+    try:
+        name = channel.prefix_channel(target)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 1
+    paths = args.packages or sorted(args.output_dir.glob("noarch/qgis-plugin-*.conda"))
+    have = plan.published(channel.records(target))
+    todo = [p for p in paths if plan.package_key(p) not in have]
+    print(f"{len(todo)} of {len(paths)} packages not on {target}")
+    if not todo:
+        return 0
+    # Authentication: PREFIX_API_KEY, the keychain, or trusted publishing in CI.
+    cmd = ["rattler-build", "upload", "prefix", "--channel", name, "--skip-existing"]
+    cmd += [str(p) for p in todo]
+    if args.dry_run:
+        print(" ".join(cmd))
+        return 0
+    return subprocess.run(cmd, check=False).returncode
+
+
 def _catalogue(args: argparse.Namespace) -> int:
     from qp import catalogue, channel, config
 
@@ -140,6 +190,13 @@ def _build(args: argparse.Namespace) -> int:
     if not dirs:
         print(f"no generated recipes in {args.recipes_dir}; run `qp generate` first")
         return 1
+    if args.channel:
+        from qp import channel, plan
+
+        have = plan.published(channel.records(args.channel))
+        for d in [d for d in dirs if build.recipe_key(d) in have]:
+            print(f"{d.name}: already on {args.channel}, skipped")
+        dirs = [d for d in dirs if build.recipe_key(d) not in have]
     failed = [d.name for d in dirs if build.build(d, args.output_dir, not args.no_test) != 0]
     for name in failed:
         print(f"FAILED: {name}", file=sys.stderr)
@@ -168,6 +225,18 @@ def _build_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--no-test", action="store_true", help="skip the QGIS tests (fast, for iterating)"
     )
+    parser.add_argument("--channel", help="skip packages already on this channel (URL or dir)")
+
+
+def _plan_args(parser: argparse.ArgumentParser) -> None:
+    _plugin_filter(parser)
+    _check_args(parser)
+
+
+def _upload_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--channel", help="prefix.dev channel URL (default: settings.channel)")
+    parser.add_argument("--dry-run", action="store_true", help="print the upload command only")
+    parser.add_argument("packages", nargs="*", type=Path, help="default: output/noarch/*")
 
 
 def _schema(args: argparse.Namespace) -> int:
@@ -211,7 +280,9 @@ def _top(parser: argparse.ArgumentParser) -> None:
 
 COMMANDS = [
     Command("feed", "fetch and cache the plugins.qgis.org feeds", "M1", run=_feed),
-    Command("plan", "list selected plugin versions not yet on the channel", "M5"),
+    Command(
+        "plan", "list selected plugin versions not yet on the channel", "M5", _plan_args, _plan
+    ),
     Command("generate", "write rattler-build recipes to recipes/", "M1", _plugin_filter, _generate),
     Command(
         "build", "build and test the generated recipes into output/", "M1", _build_args, _build
@@ -223,7 +294,13 @@ COMMANDS = [
         _validate_args,
         _validate,
     ),
-    Command("upload", "upload built packages to the prefix.dev channel", "M5"),
+    Command(
+        "upload",
+        "upload built packages not yet on the prefix.dev channel",
+        "M5",
+        _upload_args,
+        _upload,
+    ),
     Command("add", "add a plugin to plugins.toml", "M2", _slug, _add),
     Command("schema", "print the JSON schema of plugins.toml", "M2", _schema_args, _schema),
     Command("top", "suggest the most-downloaded plugins not yet selected", "M8", _top),

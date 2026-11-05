@@ -18,6 +18,12 @@ def recipe_dirs(recipes_dir: Path, slugs: list[str] | None = None) -> list[Path]
     return dirs
 
 
+def recipe_key(recipe_dir: Path) -> tuple[str, str, int]:
+    """(name, version, build_number) of the package a generated recipe builds."""
+    recipe = yaml.safe_load((recipe_dir / "recipe.yaml").read_text())
+    return recipe["package"]["name"], recipe["context"]["version"], recipe["build"]["number"]
+
+
 def build(recipe_dir: Path, output_dir: Path, test: bool = True) -> int:
     """Build one recipe. Without `test`, the recipe's QGIS tests are skipped: each one
     creates a QGIS environment, which makes them slow for iterating on recipes."""

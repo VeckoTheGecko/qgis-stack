@@ -1,11 +1,14 @@
 """What's already published: our channel's repodata and conda-forge's package names."""
 
 import json
+import re
+import urllib.error
 from dataclasses import dataclass
 from pathlib import Path
 
 from qp.feed import CACHE_DIR, fetch
 
+PREFIX_URL = re.compile(r"^https://prefix\.dev/([a-z0-9][a-z0-9_-]*)/?$")
 CONDA_FORGE_CHANNELDATA = "https://conda.anaconda.org/conda-forge/channeldata.json"
 
 
@@ -24,8 +27,12 @@ def records(channel: str) -> list[Record]:
     if channel.startswith(("http://", "https://")):
         try:
             raw = fetch(f"{channel.rstrip('/')}/noarch/repodata.json")
-        except OSError:
-            return []
+        except urllib.error.HTTPError as e:
+            # Only a missing channel counts as empty: on any other error, a sync
+            # would otherwise rebuild everything.
+            if e.code == 404:
+                return []
+            raise
     else:
         path = Path(channel) / "noarch" / "repodata.json"
         if not path.exists():
@@ -43,6 +50,16 @@ def records(channel: str) -> list[Record]:
         )
         for p in packages.values()
     ]
+
+
+def prefix_channel(channel: str) -> str:
+    """The channel name in a prefix.dev channel URL (https://prefix.dev/<name>)."""
+    match = PREFIX_URL.match(channel)
+    if not match:
+        raise ValueError(
+            f"not a prefix.dev channel URL: {channel} (expected https://prefix.dev/<name>)"
+        )
+    return match.group(1)
 
 
 def conda_forge_names(cache_dir: Path = CACHE_DIR, refresh: bool = False) -> set[str]:
