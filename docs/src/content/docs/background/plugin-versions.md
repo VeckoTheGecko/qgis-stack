@@ -132,17 +132,12 @@ No feed version has a part with a leading zero, which is consistent with the sto
 
 ## 5. Implications for the pipeline
 
-**Mismatched versions fail today.**
+**Rewritten versions are handled (fixed in M2).**
 
-- `qp.recipe.generate` raises when the `metadata.txt` version differs from the feed version.
-- `build.sh` checks `PLUGIN_VERSION`, which is the feed version, against `metadata.txt`.
-- So the plugins in the round-trip table above can't be built.
-
-**Proposed fix (not done):**
-
-- compare `server_form(metadata_version)` with the feed version;
-- keep the feed version for the URL and file name;
-- pass the `metadata.txt` version to the build script separately, for its check.
+- `qp.recipe.generate` accepts a `metadata.txt` version whose `server_form` equals the feed version, and still rejects any other mismatch.
+- The download URL and file name keep the feed version.
+- When the two differ, the recipe passes the `metadata.txt` version to `build.sh` as `PLUGIN_META_VERSION`, and `build.sh` checks `metadata.txt` against it instead of the feed version.
+- Versions like `beta` (from `0.1 beta`) still need a `version` override to get a conda version.
 
 **Open question: ordering.** Does conda order `normalize()`d versions the way QGIS ≥ 3.44 orders them with PEP 440? If not, the newest build pixi picks may not be the one the Plugin Manager calls newest. One way to answer it is a property test with [py-rattler](https://github.com/conda/rattler)'s `Version`.
 

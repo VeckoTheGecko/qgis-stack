@@ -82,7 +82,9 @@ def generate(
     slug = entry.slug
     plugin = plugin or Plugin(slug=slug)
     meta = metadata.read(data, slug)
-    if meta.version != entry.version:
+    # plugins.qgis.org stores a normalised form of the metadata.txt version (e.g.
+    # 1.0.0a2 -> 1.0.a2), and the feed and download URL use that form.
+    if versions.server_form(meta.version) != entry.version:
         raise ValueError(f"{slug}: metadata.txt version {meta.version} != feed {entry.version}")
     version = versions.normalize(entry.version, plugin.version)
     # The version in plugins.qgis.org URLs and metadata.txt, when it differs.
@@ -124,6 +126,16 @@ def generate(
         context["upstream_version"] = entry.version
     context |= {"qgis_min": qgis_min, "qgis_max": qgis_max}
 
+    env = {
+        "PLUGIN": "${{ plugin }}",
+        "PLUGIN_VERSION": src_version,
+        "QGIS_MIN": check_min,
+        "QGIS_MAX": check_max,
+    }
+    if meta.version != entry.version:
+        # build.sh checks metadata.txt against this instead of the feed's form.
+        env["PLUGIN_META_VERSION"] = meta.version
+
     recipe = {
         "context": context,
         "package": {"name": name, "version": "${{ version }}"},
@@ -137,12 +149,7 @@ def generate(
             "noarch": "generic",
             "script": {
                 "file": "build.sh",
-                "env": {
-                    "PLUGIN": "${{ plugin }}",
-                    "PLUGIN_VERSION": src_version,
-                    "QGIS_MIN": check_min,
-                    "QGIS_MAX": check_max,
-                },
+                "env": env,
             },
         },
         "requirements": {
