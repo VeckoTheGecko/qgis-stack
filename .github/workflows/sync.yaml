@@ -3,9 +3,7 @@
 # just picks up where the last one stopped.
 #
 # One-off setup:
-# - Repository variable QSTACK_CHANNEL: the target channel URL, e.g.
-#   https://prefix.dev/qstack-test (use a test channel first). Without it this
-#   workflow does nothing.
+# - QSTACK_CHANNEL below: the target channel (a public prefix.dev channel).
 # - On prefix.dev, in the channel's settings, add this repository and the workflow
 #   file `sync.yaml` as a trusted publisher. Uploads then authenticate with GitHub's
 #   OIDC token; no API key is stored.
@@ -21,8 +19,17 @@ on:
         type: boolean
         default: false
 
+env:
+  # The prefix.dev channel packages are published to (the test channel for now).
+  QSTACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
+
 permissions:
   contents: read
+
+defaults:
+  run:
+    # Explicit bash adds -o pipefail, so `qp ... | tee` fails when qp does.
+    shell: bash
 
 concurrency:
   group: sync
@@ -30,14 +37,11 @@ concurrency:
 
 jobs:
   sync:
-    if: vars.QSTACK_CHANNEL != ''
     runs-on: ubuntu-latest
     timeout-minutes: 300
     permissions:
       contents: read
       id-token: write # trusted publishing to prefix.dev
-    env:
-      CHANNEL: ${{ vars.QSTACK_CHANNEL }}
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -55,8 +59,8 @@ jobs:
       - name: Plan
         run: |
           {
-            echo "## Packages not yet on $CHANNEL"
-            pixi run qp plan --channel "$CHANNEL"
+            echo "## Packages not yet on $QSTACK_CHANNEL"
+            pixi run qp plan --channel "$QSTACK_CHANNEL"
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
       # A plugin that needs an override (licence, version, ...) mustn't block the
@@ -69,7 +73,7 @@ jobs:
       - name: Build and test
         id: build
         continue-on-error: true
-        run: pixi run qp build --channel "$CHANNEL"
+        run: pixi run qp build --channel "$QSTACK_CHANNEL"
 
       - name: Validate packages
         run: |
@@ -81,7 +85,7 @@ jobs:
 
       - name: Upload
         if: ${{ !inputs.dry-run }}
-        run: pixi run qp upload --channel "$CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: pixi run qp upload --channel "$QSTACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Fail if a plugin failed
         if: steps.generate.outcome == 'failure' || steps.build.outcome == 'failure'

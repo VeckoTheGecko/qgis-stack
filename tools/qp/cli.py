@@ -342,10 +342,11 @@ def main(argv: list[str] | None = None) -> int:
     if command.run is None:
         print(f"qp {command.name}: not implemented yet (planned for {command.milestone})")
         return NOT_IMPLEMENTED
+    from qp.channel import ChannelError
     from qp.config import ConfigError
 
     try:
         return command.run(args)
-    except ConfigError as e:
+    except (ConfigError, ChannelError) as e:
         print(e, file=sys.stderr)
         return 1

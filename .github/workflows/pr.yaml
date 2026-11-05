@@ -13,8 +13,17 @@ on:
         type: boolean
         default: false
 
+env:
+  # The prefix.dev channel packages are published to (the test channel for now).
+  QSTACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
+
 permissions:
   contents: read
+
+defaults:
+  run:
+    # Explicit bash adds -o pipefail, so `qp ... | tee` fails when qp does.
+    shell: bash
 
 concurrency:
   group: pr-${{ github.ref }}
@@ -46,17 +55,15 @@ jobs:
           git diff --exit-code plugins.schema.json
 
       - name: qp check
-        env:
-          CHANNEL: ${{ vars.QSTACK_CHANNEL }}
-        run: pixi run qp check ${CHANNEL:+--channel "$CHANNEL"}
+        run: pixi run qp check --channel "$QSTACK_CHANNEL"
 
   plugins:
     needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
-      # Without a channel (or with the "all" input), every plugin is built.
-      CHANNEL: ${{ !inputs.all && vars.QSTACK_CHANNEL || '' }}
+      # With the "all" input, every plugin is built, not only those missing from the channel.
+      ALL: ${{ inputs.all || false }}
     steps:
       - uses: actions/checkout@v7.0.1
 
@@ -69,19 +76,24 @@ jobs:
           cache-write: false
 
       - name: Plan
-        if: env.CHANNEL != ''
-        run: pixi run qp plan --channel "$CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
+        if: env.ALL != 'true'
+        run: pixi run qp plan --channel "$QSTACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Generate recipes
         run: pixi run qp generate
 
       - name: Build and test
-        run: pixi run qp build ${CHANNEL:+--channel "$CHANNEL"}
+        run: |
+          if [ "$ALL" = true ]; then
+            pixi run qp build
+          else
+            pixi run qp build --channel "$QSTACK_CHANNEL"
+          fi
 
       - name: Validate packages
         run: |
           if compgen -G "output/noarch/qgis-plugin-*.conda" > /dev/null; then
             pixi run qp validate
           else
-            echo "Nothing to build: every package is already on $CHANNEL."
+            echo "Nothing to build: every package is already on $QSTACK_CHANNEL."
           fi

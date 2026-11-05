@@ -23,13 +23,25 @@ def test_package_key(file, key):
 
 @pytest.mark.parametrize(
     ("url", "name"),
-    [("https://prefix.dev/qstack", "qstack"), ("https://prefix.dev/qstack-test/", "qstack-test")],
+    [
+        ("https://prefix.dev/qstack", "qstack"),
+        ("https://prefix.dev/qstack-test/", "qstack-test"),
+        ("https://prefix.dev/veckothegecko/qgis-stack-test", "veckothegecko/qgis-stack-test"),
+    ],
 )
 def test_prefix_channel(url, name):
     assert channel.prefix_channel(url) == name
 
 
-@pytest.mark.parametrize("url", ["output", "https://conda.anaconda.org/x", "https://prefix.dev/"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "output",
+        "https://conda.anaconda.org/x",
+        "https://prefix.dev/",
+        "https://prefix.dev/channels/@veckothegecko/qgis-stack-test",  # the web page
+    ],
+)
 def test_prefix_channel_rejects(url):
     with pytest.raises(ValueError, match="prefix.dev"):
         channel.prefix_channel(url)
@@ -98,3 +110,27 @@ def test_upload_needs_prefix_url(tmp_path, capsys):
 
 class _Done:
     returncode = 0
+
+
+def test_private_channel_has_a_clear_error(monkeypatch):
+    import urllib.error
+
+    def forbidden(url, headers=None):
+        raise urllib.error.HTTPError(url, 401, "Unauthorized", {}, None)
+
+    monkeypatch.setattr(channel, "fetch", forbidden)
+    with pytest.raises(channel.ChannelError, match="private"):
+        channel.records("https://prefix.dev/veckothegecko/qgis-stack-test")
+
+
+def test_private_channel_uses_api_key(monkeypatch):
+    seen = {}
+
+    def fetch(url, headers=None):
+        seen.update(headers or {})
+        return b'{"packages.conda": {}}'
+
+    monkeypatch.setattr(channel, "fetch", fetch)
+    monkeypatch.setenv("PREFIX_API_KEY", "pfx_secret")
+    assert channel.records("https://prefix.dev/veckothegecko/qgis-stack-test") == []
+    assert seen["Authorization"] == "Bearer pfx_secret"

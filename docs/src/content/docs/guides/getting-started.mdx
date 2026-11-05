@@ -10,8 +10,9 @@ banner:
 import { Aside, Steps } from "@astrojs/starlight/components";
 
 <Aside type="caution">
-  The channel isn't published yet. Until it is, the `test-workspace/` folder in
-  the repository shows the same setup with a locally built plugin.
+  Packages currently go to a **test** channel,
+  `https://prefix.dev/veckothegecko/qgis-stack-test`. The final channel URL will
+  be different.
 </Aside>
 
 <Steps>
@@ -24,7 +25,7 @@ import { Aside, Steps } from "@astrojs/starlight/components";
    [workspace]
    name = "my-gis"
    # QStack first, then conda-forge for QGIS and the plugins' dependencies.
-   channels = ["https://prefix.dev/qstack", "conda-forge"]
+   channels = ["https://prefix.dev/veckothegecko/qgis-stack-test", "conda-forge"]
    # QGIS 4.2 on conda-forge needs macOS 14 or later.
    platforms = [
      { name = "osx-arm64-14", platform = "osx-arm64", macos = "14.0" },

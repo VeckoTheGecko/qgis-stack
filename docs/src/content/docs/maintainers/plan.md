@@ -293,7 +293,7 @@ Builds run on `ubuntu-latest`. Being noarch, a Windows job tests the `__win` var
 
 - `qp plan`, `qp build --channel` and `qp upload` key packages on (name, version, build number) against the channel's `noarch/repodata.json`. A 404 counts as an empty channel; other errors abort, so an outage can't trigger a full rebuild.
 - `qp upload` runs `rattler-build upload prefix --skip-existing`. With no API key, rattler-build uses trusted publishing in GitHub Actions.
-- `sync.yaml` and `pr.yaml` as in the table above. Per-plugin failures don't stop the run: sync uploads what passed, then fails.
+- `sync.yaml` and `pr.yaml` as in the table above. The channel is set in each workflow's `QSTACK_CHANNEL` env var: the public test channel `https://prefix.dev/veckothegecko/qgis-stack-test`. Channel URLs are `https://prefix.dev/<namespace>/<channel>`; upload uses `<namespace>/<channel>`. Per-plugin failures don't stop the run: sync uploads what passed, then fails.
 - Not done:
   - the hash-drift check. Repodata has no `extra.source_sha256`, so it needs the published package's `info/` files;
   - verifying against a real channel and switching `test-workspace` to it (needs the GitHub repo and prefix.dev channel).
@@ -319,7 +319,7 @@ Modelled on `RoboStack/robostack.github.io`, which uses Astro + Starlight + Svel
 - Astro 7 + Starlight 0.42, no Svelte. The catalogue is an Astro component (`PluginTable.astro`) over `docs/src/data/plugins.json`, written by `qp catalogue` (`pixi run docs-data [channel]`), which orders versions with py-rattler. An empty or missing file renders a "nothing published" note.
 - Extra tasks: `docs-data`, `docs-fmt`.
 - `starlight-links-validator` fails the build on broken internal links. Pages link root-relative; a Sätteri hast plugin in `astro.config.mjs` adds the GitHub Pages base path first.
-- Deploy: `.github/workflows/docs.yaml` with `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages`. The channel comes from the repository variable `QSTACK_CHANNEL`.
+- Deploy: `.github/workflows/docs.yaml` with `actions/configure-pages` → `upload-pages-artifact` → `deploy-pages`. The channel comes from the workflow env var `QSTACK_CHANNEL`.
 - lefthook: prettier on staged docs files (pre-commit); `docs-check` + `docs-build` when pushing docs changes.
 - AI-written pages carry a "not yet human-verified" banner.
 - Not done: deployment (no remote yet).
