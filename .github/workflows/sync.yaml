@@ -1,0 +1,94 @@
+# Daily: package what's in plugins.toml and not yet on the channel, test it, upload it.
+# The channel is the state (no state in the repository), so a failed or repeated run
+# just picks up where the last one stopped.
+#
+# One-off setup:
+# - QSTACK_CHANNEL below: the target channel (a public prefix.dev channel).
+# - On prefix.dev, in the channel's settings, add this repository and the workflow
+#   file `sync.yaml` as a trusted publisher. Uploads then authenticate with GitHub's
+#   OIDC token; no API key is stored.
+name: Sync
+
+on:
+  # schedule:
+  #   - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Build and test, but don't upload
+        type: boolean
+        default: false
+
+env:
+  # The prefix.dev channel packages are published to (the test channel for now).
+  QSTACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    # Explicit bash adds -o pipefail, so `qp ... | tee` fails when qp does.
+    shell: bash
+
+concurrency:
+  group: sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    permissions:
+      contents: read
+      id-token: write # trusted publishing to prefix.dev
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: prefix-dev/setup-pixi@v0.11.2
+        with:
+          pixi-version: v0.83.0
+          environments: default
+          locked: true
+          cache: true
+          cache-write: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Fetch the plugins.qgis.org feeds
+        run: pixi run qp feed
+
+      - name: Plan
+        run: |
+          {
+            echo "## Packages not yet on $QSTACK_CHANNEL"
+            pixi run qp plan --channel "$QSTACK_CHANNEL"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # A plugin that needs an override (licence, version, ...) mustn't block the
+      # others: carry on, and fail the run at the end.
+      - name: Generate recipes
+        id: generate
+        continue-on-error: true
+        run: pixi run qp generate
+
+      - name: Build and test
+        id: build
+        continue-on-error: true
+        run: pixi run qp build --channel "$QSTACK_CHANNEL"
+
+      - name: Validate packages
+        run: |
+          if compgen -G "output/noarch/qgis-plugin-*.conda" > /dev/null; then
+            pixi run qp validate
+          else
+            echo "Nothing built."
+          fi
+
+      - name: Upload
+        if: ${{ !inputs.dry-run }}
+        run: pixi run qp upload --channel "$QSTACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if a plugin failed
+        if: steps.generate.outcome == 'failure' || steps.build.outcome == 'failure'
+        run: |
+          echo "::error::Some plugins failed to generate or build; see those steps' logs."
+          exit 1

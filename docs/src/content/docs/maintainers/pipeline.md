@@ -40,8 +40,8 @@ Run them with `pixi run qp <command>` from the repository root.
 | `check`      | Config, naming collisions, conda-forge clashes, build numbers against a channel | ✅           |
 | `schema`     | Print the JSON schema of `plugins.toml`                                         | ✅           |
 | `catalogue`  | Write this site's plugin table from a channel's repodata                        | ✅           |
-| `plan`       | List selected versions not yet on the channel                                   | planned (M5) |
-| `upload`     | Upload to prefix.dev                                                            | planned (M5) |
+| `plan`       | List selected versions not yet on the channel                                   | ✅           |
+| `upload`     | Upload built packages not yet on the prefix.dev channel                         | ✅           |
 | `scan-deps`  | Suggest `add_run` from a plugin's imports                                       | planned (M3) |
 | `top`        | Suggest popular plugins not yet selected                                        | planned (M8) |
 
@@ -82,13 +82,46 @@ then checks every link at build time, so a broken link fails the build.
 
 ## CI
 
-| Workflow             | Does                                                                        | Status       |
-| -------------------- | --------------------------------------------------------------------------- | ------------ |
-| `docs.yaml`          | Build the site on pull requests; build and deploy to GitHub Pages on `main` | ✅           |
-| `pr.yaml`            | Tests, `check`, build the changed plugins                                   | planned      |
-| `sync.yaml`          | Daily: generate, build, validate, upload new versions                       | planned (M5) |
-| `package-tests.yaml` | Nightly: test published packages against the newest QGIS                    | planned (M8) |
+| Workflow             | Does                                                                                                                                                                               | Status                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `docs.yaml`          | Build the site on pull requests; build and deploy to GitHub Pages on `main`                                                                                                        | ✅                                     |
+| `pr.yaml`            | Pull requests and `main`: lint, tests, `plugins.schema.json` up to date, `qp check`; build and test the packages not yet on the channel (all of them without a channel). No upload | ✅                                     |
+| `sync.yaml`          | Daily: fetch feeds, plan, generate, build and test, validate, upload                                                                                                               | ✅ (untested until the channel exists) |
+| `package-tests.yaml` | Nightly: test published packages against the newest QGIS                                                                                                                           | planned (M8)                           |
 
-The docs workflow reads the published channel from the repository variable
-`QSTACK_CHANNEL` (e.g. `https://prefix.dev/qstack`). Without it, the catalogue
-is empty.
+All three workflows set the channel in a workflow-level `QSTACK_CHANNEL` env
+var, currently the test channel `https://prefix.dev/veckothegecko/qgis-stack-test`. Change it in all three to move
+to another channel.
+
+## Publishing
+
+The channel is the only state. A package is identified by its name, version and
+build number. `qp plan`, `qp build --channel` and `qp upload` all skip what the
+channel already has, so a failed or repeated sync just carries on where the last one
+stopped. A plugin that fails to generate or build doesn't block the others; the run
+uploads what passed and then fails, so the failure shows up.
+
+One-off setup:
+
+1. Create a **public** channel on [prefix.dev](https://prefix.dev). The
+   workflows and `qp` read its package index without credentials. (`qp` can read
+   a private channel with `PREFIX_API_KEY`, but the workflows don't pass one.)
+2. In the channel's settings, add this GitHub repository and the workflow
+   `sync.yaml` as a trusted publisher. Uploads then use GitHub's OIDC token, with
+   no API key stored anywhere.
+3. Set `QSTACK_CHANNEL` in the workflows to the channel's package URL:
+   `https://prefix.dev/<namespace>/<channel>`, not the website's
+   `/channels/@<namespace>/<channel>` page.
+4. Run **Sync** by hand (Actions → Sync → Run workflow), first with **dry run**.
+
+To upload from your own machine instead, set `PREFIX_API_KEY` (or log in with
+`pixi auth login prefix.dev --token <key>`) and run:
+
+```sh
+pixi run qp build --channel https://prefix.dev/veckothegecko/qgis-stack-test
+pixi run qp validate
+pixi run qp upload --channel https://prefix.dev/veckothegecko/qgis-stack-test --dry-run  # then without
+```
+
+A changed `add_run`, licence or other override for an already published version
+needs a higher `build_number`; `qp check --channel <url>` catches a missing bump.

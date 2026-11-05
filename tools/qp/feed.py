@@ -28,8 +28,8 @@ class FeedEntry:
     deprecated: bool
 
 
-def fetch(url: str) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+def fetch(url: str, headers: dict[str, str] | None = None) -> bytes:
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(headers or {})})
     with urllib.request.urlopen(request) as response:
         return response.read()
 
