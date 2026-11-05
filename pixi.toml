@@ -1,6 +1,6 @@
 [workspace]
-name = "qgis-plugin-pipeline"
-description = "Conda packages for QGIS plugins from plugins.qgis.org (QStack; see docs/src/content/docs/maintainers/plan.md)"
+name = "qgis-stack"
+description = "QGIS Stack: conda packages for QGIS plugins from plugins.qgis.org (see docs/src/content/docs/maintainers/plan.md)"
 authors = ["Vecko <36369090+VeckoTheGecko@users.noreply.github.com>"]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64", "win-64"]
@@ -19,7 +19,7 @@ py-rattler = ">=0.28.0,<0.29"
 
 [pypi-dependencies]
 # The pipeline tool (`qp`), from tools/.
-qgis-plugin-pipeline = { path = "tools", editable = true }
+qgis-stack-tools = { path = "tools", editable = true }
 
 [tasks]
 test = { cmd = "pytest tools/tests", description = "Unit tests of the pipeline tool (offline)" }

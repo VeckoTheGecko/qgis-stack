@@ -1,6 +1,6 @@
 ---
 title: Plugin version strings
-description: What plugins.qgis.org does to plugin versions, how QGIS compares them, and how QStack handles them.
+description: What plugins.qgis.org does to plugin versions, how QGIS compares them, and how QGIS Stack handles them.
 sidebar:
   order: 2
 banner:

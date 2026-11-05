@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "qgis-plugin-pipeline"
+name = "qgis-stack-tools"
 version = "0.0.0"
 description = "Generate, build and publish conda packages for QGIS plugins"
 requires-python = ">=3.14"

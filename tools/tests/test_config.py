@@ -21,7 +21,7 @@ def test_overrides(tmp_path):
         tmp_path,
         """
 [plugins.demo]
-name = "qgis-plugin-demo2"
+name = "qgis-stack-demo2"
 add_run = ["plotly", "pandas >=2", "libopencv * *qt6*"]
 qgis = { min = "3.40", max = "3.99" }
 version = { "1.0-beta" = "1.0b" }
@@ -37,7 +37,7 @@ skip = "broken"
     )
     demo = cfg.plugins["demo"]
     assert demo.slug == "demo"
-    assert demo.name == "qgis-plugin-demo2"
+    assert demo.name == "qgis-stack-demo2"
     assert demo.add_run == ["plotly", "pandas >=2", "libopencv * *qt6*"]
     assert demo.qgis == QgisRange(min="3.40", max="3.99")
     assert demo.version == {"1.0-beta": "1.0b"}

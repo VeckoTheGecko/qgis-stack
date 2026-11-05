@@ -113,8 +113,8 @@ class Plugin(_Model):
     slug: SkipJsonSchema[Slug]
     name: str | None = Field(
         None,
-        pattern=r"^qgis-plugin-[a-z0-9][a-z0-9._-]*$",
-        description="Package name instead of qgis-plugin-<slug lowercased>. Needed when the "
+        pattern=r"^qgis-stack-[a-z0-9][a-z0-9._-]*$",
+        description="Package name instead of qgis-stack-<slug lowercased>. Needed when the "
         "default name is shared with another plugin.",
     )
     skip: str | None = Field(None, description="Don't build this plugin, for this reason.")

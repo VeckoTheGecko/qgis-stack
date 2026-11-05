@@ -20,7 +20,7 @@ first wins:
 | -------- | --------------------------- | ----------------------- |
 | 1        | `QGIS_PLUGINPATH`           | environment variable    |
 | 2        | `<profile>/python/plugins`  | Plugin Manager installs |
-| 3        | `share/qgis/python/plugins` | QStack packages         |
+| 3        | `share/qgis/python/plugins` | QGIS Stack packages     |
 
 So a plugin that the Plugin Manager installed or upgraded in your profile
 **shadows** the conda one. Use a profile inside the workspace
@@ -63,7 +63,7 @@ QGIS_GLOBAL_SETTINGS_FILE = "$PIXI_PROJECT_ROOT/.qgis/qgis_global_settings.ini"
 A plugin you turn off in QGIS stays off: the profile setting wins over the
 global one.
 
-Shipping this with the packages, so that `pixi add qgis-plugin-x` is enough,
+Shipping this with the packages, so that `pixi add qgis-stack-x` is enough,
 is planned (see section 11 of the [design plan](/maintainers/plan/)).
 
 ## Plugins under development

@@ -35,10 +35,10 @@ def test_read_bom_and_no_max():
 @pytest.mark.parametrize(
     ("slug", "name"),
     [
-        ("quick_map_services", "qgis-plugin-quick_map_services"),
-        ("QuickOSM", "qgis-plugin-quickosm"),
-        ("profile-manager", "qgis-plugin-profile-manager"),
-        ("profile_manager", "qgis-plugin-profile_manager"),  # no collision with the above
+        ("quick_map_services", "qgis-stack-quick_map_services"),
+        ("QuickOSM", "qgis-stack-quickosm"),
+        ("profile-manager", "qgis-stack-profile-manager"),
+        ("profile_manager", "qgis-stack-profile_manager"),  # no collision with the above
     ],
 )
 def test_package_name(slug, name):

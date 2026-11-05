@@ -1,6 +1,6 @@
 # Build the docs site on pull requests; build and deploy it to GitHub Pages from main.
 # One-off setup: Settings → Pages → Source: "GitHub Actions". The plugin catalogue
-# is read from QSTACK_CHANNEL below.
+# is read from QGIS_STACK_CHANNEL below.
 name: Docs
 
 on:
@@ -19,7 +19,7 @@ on:
 
 env:
   # The prefix.dev channel packages are published to (the test channel for now).
-  QSTACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
+  QGIS_STACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
 
 permissions:
   contents: read
@@ -48,7 +48,7 @@ jobs:
         uses: actions/configure-pages@v6.0.0
 
       - name: Catalogue data from the channel
-        run: pixi run docs-data "$QSTACK_CHANNEL"
+        run: pixi run docs-data "$QGIS_STACK_CHANNEL"
 
       - name: Check
         run: pixi run docs-check

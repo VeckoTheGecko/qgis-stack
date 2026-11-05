@@ -38,8 +38,8 @@ def test_oldest_test_line(qgis_min, qgis_max, expected):
 
 def test_generate(demo_zip):
     r = recipe.generate(entry(), demo_zip, ["3.40", "4.2"])
-    assert r.name == "qgis-plugin-demo"
-    assert r.dirname == "qgis-plugin-demo-1.0"
+    assert r.name == "qgis-stack-demo"
+    assert r.dirname == "qgis-stack-demo-1.0"
     data = r.data
     assert data["context"] == {
         "plugin": "demo",
@@ -106,7 +106,7 @@ def test_upstream_version_kept_for_downloads():
 def test_overrides(demo_zip):
     plugin = Plugin(
         slug="demo",
-        name="qgis-plugin-demo-renamed",
+        name="qgis-stack-demo-renamed",
         add_run=["plotly"],
         qgis=QgisRange(min="3.40", max="3.44"),
         license="MIT",
@@ -115,7 +115,7 @@ def test_overrides(demo_zip):
     )
     r = recipe.generate(entry(), demo_zip, ["3.40", "3.44", "4.2"], plugin)
     data = r.data
-    assert r.name == data["package"]["name"] == "qgis-plugin-demo-renamed"
+    assert r.name == data["package"]["name"] == "qgis-stack-demo-renamed"
     assert data["build"]["number"] == r.build_number == 3
     assert data["context"]["qgis_min"] == "3.40.0" and data["context"]["qgis_max"] == "3.44.99"
     # build.sh still checks the ZIP against metadata.txt's own range

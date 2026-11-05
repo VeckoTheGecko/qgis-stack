@@ -8,7 +8,7 @@
         "name": {
           "anyOf": [
             {
-              "pattern": "^qgis-plugin-[a-z0-9][a-z0-9._-]*$",
+              "pattern": "^qgis-stack-[a-z0-9][a-z0-9._-]*$",
               "type": "string"
             },
             {
@@ -16,7 +16,7 @@
             }
           ],
           "default": null,
-          "description": "Package name instead of qgis-plugin-<slug lowercased>. Needed when the default name is shared with another plugin.",
+          "description": "Package name instead of qgis-stack-<slug lowercased>. Needed when the default name is shared with another plugin.",
           "title": "Name"
         },
         "skip": {

@@ -28,12 +28,13 @@ const baseLinks = defineHastPlugin({
 });
 
 export default defineConfig({
-  site: process.env.SITE_URL,
+  // Unset or empty on pull requests: an empty string is an invalid URL to Astro.
+  site: process.env.SITE_URL || undefined,
   base,
   markdown: { processor: satteri({ hastPlugins: [baseLinks] }) },
   integrations: [
     starlight({
-      title: "QStack",
+      title: "QGIS Stack",
       description:
         "QGIS plugins from plugins.qgis.org as conda packages, for reproducible QGIS setups with pixi.",
       plugins: [starlightLinksValidator()],

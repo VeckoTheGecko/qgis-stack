@@ -18,7 +18,7 @@ def published(records: Iterable[Record]) -> set[Key]:
 
 def package_key(path: Path) -> Key:
     """(name, version, build_number) from a package file name such as
-    qgis-plugin-latlontools-4.0.4-h4616a5c_0.conda. Versions and build strings have no
+    qgis-stack-latlontools-4.0.4-h4616a5c_0.conda. Versions and build strings have no
     dashes, so the name is everything before the last two."""
     stem = path.name.removesuffix(".conda").removesuffix(".tar.bz2")
     name, version, build = stem.rsplit("-", 2)

@@ -1,6 +1,6 @@
 ---
 title: The pipeline
-description: How QStack turns plugins.qgis.org into conda packages, and the commands and tasks maintainers use.
+description: How QGIS Stack turns plugins.qgis.org into conda packages, and the commands and tasks maintainers use.
 sidebar:
   order: 1
 banner:
@@ -89,7 +89,7 @@ then checks every link at build time, so a broken link fails the build.
 | `sync.yaml`          | Daily: fetch feeds, plan, generate, build and test, validate, upload                                                                                                               | ✅ (untested until the channel exists) |
 | `package-tests.yaml` | Nightly: test published packages against the newest QGIS                                                                                                                           | planned (M8)                           |
 
-All three workflows set the channel in a workflow-level `QSTACK_CHANNEL` env
+All three workflows set the channel in a workflow-level `QGIS_STACK_CHANNEL` env
 var, currently the test channel `https://prefix.dev/veckothegecko/qgis-stack-test`. Change it in all three to move
 to another channel.
 
@@ -109,7 +109,7 @@ One-off setup:
 2. In the channel's settings, add this GitHub repository and the workflow
    `sync.yaml` as a trusted publisher. Uploads then use GitHub's OIDC token, with
    no API key stored anywhere.
-3. Set `QSTACK_CHANNEL` in the workflows to the channel's package URL:
+3. Set `QGIS_STACK_CHANNEL` in the workflows to the channel's package URL:
    `https://prefix.dev/<namespace>/<channel>`, not the website's
    `/channels/@<namespace>/<channel>` page.
 4. Run **Sync** by hand (Actions → Sync → Run workflow), first with **dry run**.

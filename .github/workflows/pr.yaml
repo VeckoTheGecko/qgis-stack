@@ -15,7 +15,7 @@ on:
 
 env:
   # The prefix.dev channel packages are published to (the test channel for now).
-  QSTACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
+  QGIS_STACK_CHANNEL: https://prefix.dev/veckothegecko/qgis-stack-test
 
 permissions:
   contents: read
@@ -55,7 +55,7 @@ jobs:
           git diff --exit-code plugins.schema.json
 
       - name: qp check
-        run: pixi run qp check --channel "$QSTACK_CHANNEL"
+        run: pixi run qp check --channel "$QGIS_STACK_CHANNEL"
 
   plugins:
     needs: checks
@@ -77,7 +77,7 @@ jobs:
 
       - name: Plan
         if: env.ALL != 'true'
-        run: pixi run qp plan --channel "$QSTACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
+        run: pixi run qp plan --channel "$QGIS_STACK_CHANNEL" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Generate recipes
         run: pixi run qp generate
@@ -87,13 +87,13 @@ jobs:
           if [ "$ALL" = true ]; then
             pixi run qp build
           else
-            pixi run qp build --channel "$QSTACK_CHANNEL"
+            pixi run qp build --channel "$QGIS_STACK_CHANNEL"
           fi
 
       - name: Validate packages
         run: |
-          if compgen -G "output/noarch/qgis-plugin-*.conda" > /dev/null; then
+          if compgen -G "output/noarch/qgis-stack-*.conda" > /dev/null; then
             pixi run qp validate
           else
-            echo "Nothing to build: every package is already on $QSTACK_CHANNEL."
+            echo "Nothing to build: every package is already on $QGIS_STACK_CHANNEL."
           fi

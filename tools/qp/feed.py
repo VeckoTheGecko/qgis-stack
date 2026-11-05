@@ -12,7 +12,7 @@ FEED_URL = "https://plugins.qgis.org/plugins/plugins.xml?qgis={line}"
 DOWNLOAD_URL = "https://plugins.qgis.org/plugins/{slug}/version/{version}/download/"
 CACHE_DIR = Path(".cache/qp")
 # plugins.qgis.org (Cloudflare) rejects urllib's default User-Agent.
-USER_AGENT = "qgis-plugin-pipeline"
+USER_AGENT = "qgis-stack"
 
 _SLUG_FROM_URL = re.compile(r"/plugins/([^/]+)/version/([^/]+)/download/")
 

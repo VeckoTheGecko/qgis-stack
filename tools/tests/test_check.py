@@ -26,37 +26,37 @@ def test_naming_ok():
 def test_naming_default_collides_with_unselected_feed_plugin():
     problems = check.naming(config(Plugin(slug="auto_save")), {"auto_save", "Auto_save"})
     assert problems == [
-        "auto_save: qgis-plugin-auto_save is also the default name of Auto_save on "
+        "auto_save: qgis-stack-auto_save is also the default name of Auto_save on "
         "plugins.qgis.org; set an explicit `name`"
     ]
 
 
 def test_naming_explicit_names_resolve_collision():
     cfg = config(
-        Plugin(slug="auto_save", name="qgis-plugin-auto_save"),
-        Plugin(slug="Auto_save", name="qgis-plugin-auto_save-legacy"),
+        Plugin(slug="auto_save", name="qgis-stack-auto_save"),
+        Plugin(slug="Auto_save", name="qgis-stack-auto_save-legacy"),
     )
     assert check.naming(cfg, {"auto_save", "Auto_save"}) == []
 
 
 def test_naming_duplicate_names():
-    cfg = config(Plugin(slug="a", name="qgis-plugin-x"), Plugin(slug="b", name="qgis-plugin-x"))
-    assert check.naming(cfg, set()) == ["a, b: all named qgis-plugin-x"]
+    cfg = config(Plugin(slug="a", name="qgis-stack-x"), Plugin(slug="b", name="qgis-stack-x"))
+    assert check.naming(cfg, set()) == ["a, b: all named qgis-stack-x"]
 
 
 def test_conda_forge_clash():
     cfg = config(Plugin(slug="manager"), Plugin(slug="demo"))
-    assert check.conda_forge_clash(cfg, {"qgis", "qgis-plugin-manager"}) == [
-        "manager: qgis-plugin-manager exists on conda-forge"
+    assert check.conda_forge_clash(cfg, {"qgis", "qgis-stack-manager"}) == [
+        "manager: qgis-stack-manager exists on conda-forge"
     ]
 
 
 def recipe(depends, build_number=0, license="GPL-2.0-or-later") -> Recipe:
-    return Recipe("qgis-plugin-demo", "1.0", build_number, depends, license, data={})
+    return Recipe("qgis-stack-demo", "1.0", build_number, depends, license, data={})
 
 
 def record(depends, build_number=0, license="GPL-2.0-or-later") -> Record:
-    return Record("qgis-plugin-demo", "1.0", build_number, depends, license)
+    return Record("qgis-stack-demo", "1.0", build_number, depends, license)
 
 
 QGIS = "qgis >=3.32.0,<=4.99.99"
@@ -82,4 +82,4 @@ def test_build_numbers_compare_with_newest_build():
     assert check.build_numbers([recipe([QGIS, "plotly"], build_number=1)], published) == []
     assert check.build_numbers([recipe([QGIS, "plotly"], build_number=2)], published) == []
     problems = check.build_numbers([recipe([QGIS])], published)
-    assert problems == ["qgis-plugin-demo 1.0: build_number 0 is below the published 1"]
+    assert problems == ["qgis-stack-demo 1.0: build_number 0 is below the published 1"]

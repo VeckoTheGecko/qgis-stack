@@ -14,7 +14,7 @@ context:
   qgis_max: "4.99.99"
 
 package:
-  name: qgis-plugin-quick_map_services
+  name: qgis-stack-quick_map_services
   version: ${{ version }}
 
 source:

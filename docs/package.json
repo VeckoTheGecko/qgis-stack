@@ -1,5 +1,5 @@
 {
-  "name": "qstack-docs",
+  "name": "qgis-stack-docs",
   "type": "module",
   "private": true,
   "scripts": {
